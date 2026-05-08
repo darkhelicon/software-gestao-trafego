@@ -66,6 +66,20 @@ spec:
                 secretKeyRef:
                   name: adflow-encryption_key
                   key: latest
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-jwt_secret
+                  key: latest
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-jwt_refresh_secret
+                  key: latest
+            - name: JWT_EXPIRES_IN
+              value: "15m"
+            - name: JWT_REFRESH_EXPIRES_IN
+              value: "7d"
             - name: STRIPE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
