@@ -35,8 +35,6 @@ spec:
           env:
             - name: NODE_ENV
               value: production
-            - name: PORT
-              value: "3001"
             # ── Secrets from GCP Secret Manager ─────────────────────────────
             - name: DATABASE_URL
               valueFrom:
