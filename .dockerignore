@@ -1,0 +1,41 @@
+# Dependencies (installed fresh inside Docker)
+node_modules
+**/node_modules
+
+# Build outputs (rebuilt inside Docker)
+**/dist
+**/.next
+**/build
+**/.turbo
+
+# Dev/test artifacts
+**/*.test.ts
+**/*.spec.ts
+**/coverage
+**/.nyc_output
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+
+# Docker files (not needed in build)
+**/Dockerfile
+.dockerignore
+
+# Editor / OS
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/*.log
+**/logs
+
+# pnpm store cache
+.pnpm-store

@@ -1,0 +1,100 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: adflow-worker
+  annotations:
+    run.googleapis.com/ingress: internal
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/cloudsql-instances: "${GCP_PROJECT_ID}:${GCP_REGION}:adflow-postgres"
+    spec:
+      serviceAccountName: adflow-worker-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+      containerConcurrency: 1
+      timeoutSeconds: 900
+      containers:
+        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adflow/worker:${IMAGE_TAG}
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: "500m"
+              memory: 512Mi
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "8080"
+            # ── Secrets from GCP Secret Manager ─────────────────────────────
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-database_url
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-redis_url
+                  key: latest
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-encryption_key
+                  key: latest
+            - name: TIKTOK_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-tiktok_app_id
+                  key: latest
+            - name: TIKTOK_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-tiktok_app_secret
+                  key: latest
+            - name: META_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-meta_app_id
+                  key: latest
+            - name: META_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-meta_app_secret
+                  key: latest
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-sentry_dsn
+                  key: latest
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-gcp_project_id
+                  key: latest
+            - name: GCP_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-gcp_bucket_name
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3

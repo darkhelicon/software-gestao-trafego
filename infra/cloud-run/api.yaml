@@ -1,0 +1,166 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: adflow-api
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "20"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/startup-cpu-boost: "true"
+        run.googleapis.com/cloudsql-instances: "${GCP_PROJECT_ID}:${GCP_REGION}:adflow-postgres"
+    spec:
+      serviceAccountName: adflow-api-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+      containerConcurrency: 100
+      timeoutSeconds: 60
+      containers:
+        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adflow/api:${IMAGE_TAG}
+          ports:
+            - containerPort: 3001
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: "500m"
+              memory: 512Mi
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3001"
+            # ── Secrets from GCP Secret Manager ─────────────────────────────
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-database_url
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-redis_url
+                  key: latest
+            - name: FIREBASE_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-firebase_project_id
+                  key: latest
+            - name: FIREBASE_CLIENT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-firebase_client_email
+                  key: latest
+            - name: FIREBASE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-firebase_private_key
+                  key: latest
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-encryption_key
+                  key: latest
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_secret_key
+                  key: latest
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_webhook_secret
+                  key: latest
+            - name: STRIPE_PRICE_START
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_price_start
+                  key: latest
+            - name: STRIPE_PRICE_GROWTH
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_price_growth
+                  key: latest
+            - name: STRIPE_PRICE_SCALE
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_price_scale
+                  key: latest
+            - name: STRIPE_PRICE_ENTERPRISE
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-stripe_price_enterprise
+                  key: latest
+            - name: TIKTOK_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-tiktok_app_id
+                  key: latest
+            - name: TIKTOK_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-tiktok_app_secret
+                  key: latest
+            - name: TIKTOK_REDIRECT_URI
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-tiktok_redirect_uri
+                  key: latest
+            - name: META_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-meta_app_id
+                  key: latest
+            - name: META_APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-meta_app_secret
+                  key: latest
+            - name: META_REDIRECT_URI
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-meta_redirect_uri
+                  key: latest
+            - name: GCP_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-gcp_project_id
+                  key: latest
+            - name: GCP_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-gcp_bucket_name
+                  key: latest
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-sentry_dsn
+                  key: latest
+            - name: ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-allowed_origins
+                  key: latest
+            - name: FRONTEND_URL
+              valueFrom:
+                secretKeyRef:
+                  name: adflow-frontend_url
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3001
+            periodSeconds: 30
+            failureThreshold: 3

@@ -1,0 +1,75 @@
+steps:
+  # Build API image
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-api"
+    args:
+      - build
+      - --target=production
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:latest
+      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:latest
+      - --file=apps/api/Dockerfile
+      - .
+
+  # Build Worker image
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-worker"
+    args:
+      - build
+      - --target=production
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:latest
+      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:latest
+      - --file=apps/worker/Dockerfile
+      - .
+
+  # Push API
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-api"
+    waitFor: ["build-api"]
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api
+
+  # Push Worker
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-worker"
+    waitFor: ["build-worker"]
+    args:
+      - push
+      - --all-tags
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker
+
+  # Deploy API to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "deploy-api"
+    waitFor: ["push-api"]
+    args:
+      - run
+      - deploy
+      - adflow-api
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --quiet
+
+  # Deploy Worker to Cloud Run
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "deploy-worker"
+    waitFor: ["push-worker"]
+    args:
+      - run
+      - deploy
+      - adflow-worker
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --quiet
+
+substitutions:
+  _REGION: us-central1
+
+options:
+  machineType: E2_HIGHCPU_8
+  logging: CLOUD_LOGGING_ONLY

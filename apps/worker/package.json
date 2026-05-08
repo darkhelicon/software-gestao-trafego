@@ -1,0 +1,27 @@
+{
+  "name": "@adflow/worker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --conditions source watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@adflow/config": "workspace:*",
+    "@adflow/database": "workspace:*",
+    "@adflow/integrations": "workspace:*",
+    "@adflow/types": "workspace:*",
+    "@sentry/node": "^10.52.0",
+    "bullmq": "^5.27.0",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

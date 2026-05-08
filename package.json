@@ -1,0 +1,26 @@
+{
+  "name": "adflow",
+  "private": true,
+  "version": "0.0.1",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @adflow/database db:generate",
+    "db:migrate": "pnpm --filter @adflow/database db:migrate",
+    "db:push": "pnpm --filter @adflow/database db:push",
+    "db:studio": "pnpm --filter @adflow/database db:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "prettier": "^3.4.2",
+    "@types/node": "^22.10.2"
+  }
+}

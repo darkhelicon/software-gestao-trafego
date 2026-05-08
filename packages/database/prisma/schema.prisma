@@ -1,0 +1,623 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================
+// ENUMS
+// ========================
+
+enum OrgRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  VIEWER
+}
+
+enum PlanSlug {
+  START
+  GROWTH
+  SCALE
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+enum Platform {
+  TIKTOK
+  META
+}
+
+enum CampaignStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  PAUSED
+  DELETED
+  FAILED
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  PARTIALLY_FAILED
+}
+
+enum AutomationAction {
+  PAUSE_CAMPAIGN
+  RESUME_CAMPAIGN
+  SCALE_BUDGET
+  REDUCE_BUDGET
+  DUPLICATE_CAMPAIGN
+  SEND_ALERT
+}
+
+enum AutomationCondition {
+  CPA_ABOVE
+  CPA_BELOW
+  ROAS_ABOVE
+  ROAS_BELOW
+  CTR_BELOW
+  SPEND_ABOVE
+  BALANCE_BELOW
+  REJECTED
+}
+
+enum AlertChannel {
+  IN_APP
+  EMAIL
+  WHATSAPP
+  TELEGRAM
+  DISCORD
+  WEBHOOK
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  OAUTH_CONNECT
+  OAUTH_DISCONNECT
+  SUBSCRIPTION_CHANGE
+  CAMPAIGN_CREATE
+  CAMPAIGN_PAUSE
+  CAMPAIGN_RESUME
+}
+
+// ========================
+// USERS & AUTH
+// ========================
+
+model User {
+  id              String   @id @default(cuid())
+  firebaseUid     String   @unique @map("firebase_uid")
+  email           String   @unique
+  name            String?
+  avatarUrl       String?  @map("avatar_url")
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  organizationUsers OrganizationUser[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+// ========================
+// ORGANIZATIONS & MULTI-TENANT
+// ========================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organizationUsers  OrganizationUser[]
+  subscription       Subscription?
+  tiktokConnections  TiktokConnection[]
+  metaConnections    MetaConnection[]
+  advertiserAccounts AdvertiserAccount[]
+  campaignTemplates  CampaignTemplate[]
+  campaigns          Campaign[]
+  automationRules    AutomationRule[]
+  campaignJobs       CampaignJob[]
+  usageTracking      UsageTracking[]
+  billingEvents      BillingEvent[]
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  featureFlags       OrgFeatureFlag[]
+  notificationConfig NotificationConfig?
+
+  @@map("organizations")
+}
+
+model OrganizationUser {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           OrgRole  @default(OPERATOR)
+  invitedAt      DateTime @default(now()) @map("invited_at")
+  joinedAt       DateTime? @map("joined_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_users")
+}
+
+// ========================
+// BILLING & SUBSCRIPTIONS
+// ========================
+
+model Plan {
+  id          String   @id @default(cuid())
+  slug        PlanSlug @unique
+  name        String
+  description String?
+  priceMonthly Decimal @map("price_monthly") @db.Decimal(10, 2)
+  stripePriceId String? @map("stripe_price_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  features      PlanFeature[]
+  quotaLimits   QuotaLimit[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model PlanFeature {
+  id       String  @id @default(cuid())
+  planId   String  @map("plan_id")
+  feature  String
+  enabled  Boolean @default(true)
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, feature])
+  @@map("plan_features")
+}
+
+model QuotaLimit {
+  id       String @id @default(cuid())
+  planId   String @map("plan_id")
+  resource String  // campaigns_per_day, ads_per_day, business_centers, advertiser_accounts
+  limit    Int     // -1 = unlimited
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, resource])
+  @@map("quota_limits")
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique @map("organization_id")
+  planId               String             @map("plan_id")
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  status               SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?          @map("trial_ends_at")
+  currentPeriodStart   DateTime?          @map("current_period_start")
+  currentPeriodEnd     DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         Plan         @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model UsageTracking {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  resource       String   // campaigns_per_day, ads_per_day, etc.
+  periodDate     DateTime @map("period_date") @db.Date
+  used           Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, resource, periodDate])
+  @@map("usage_tracking")
+}
+
+model BillingEvent {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  stripeEventId  String?  @unique @map("stripe_event_id")
+  eventType      String   @map("event_type")
+  payload        Json?
+  processedAt    DateTime @default(now()) @map("processed_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("billing_events")
+}
+
+// ========================
+// FEATURE FLAGS
+// ========================
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  enabledGlobally Boolean @default(false) @map("enabled_globally")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  orgFlags OrgFeatureFlag[]
+
+  @@map("feature_flags")
+}
+
+model OrgFeatureFlag {
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  flagId         String  @map("flag_id")
+  enabled        Boolean @default(false)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  flag         FeatureFlag  @relation(fields: [flagId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, flagId])
+  @@map("org_feature_flags")
+}
+
+// ========================
+// INTEGRATIONS / OAUTH
+// ========================
+
+model TiktokConnection {
+  id               String   @id @default(cuid())
+  organizationId   String   @map("organization_id")
+  businessCenterId String   @map("business_center_id")
+  businessCenterName String? @map("business_center_name")
+  accessToken      String   // encrypted AES-256
+  refreshToken     String   // encrypted AES-256
+  tokenExpiresAt   DateTime @map("token_expires_at")
+  scopes           String[]
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  advertiserAccounts AdvertiserAccount[]
+
+  @@unique([organizationId, businessCenterId])
+  @@map("tiktok_connections")
+}
+
+model MetaConnection {
+  id                 String   @id @default(cuid())
+  organizationId     String   @map("organization_id")
+  businessManagerId  String   @map("business_manager_id")
+  businessManagerName String? @map("business_manager_name")
+  accessToken        String   // encrypted AES-256
+  tokenExpiresAt     DateTime? @map("token_expires_at")
+  scopes             String[]
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  advertiserAccounts AdvertiserAccount[]
+
+  @@unique([organizationId, businessManagerId])
+  @@map("meta_connections")
+}
+
+model AdvertiserAccount {
+  id                String    @id @default(cuid())
+  organizationId    String    @map("organization_id")
+  platform          Platform
+  externalId        String    @map("external_id")
+  name              String
+  currency          String?
+  timezone          String?
+  tiktokConnectionId String?  @map("tiktok_connection_id")
+  metaConnectionId   String?  @map("meta_connection_id")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tiktokConnection  TiktokConnection? @relation(fields: [tiktokConnectionId], references: [id])
+  metaConnection    MetaConnection?   @relation(fields: [metaConnectionId], references: [id])
+  campaigns         Campaign[]
+  reportsDaily      ReportDaily[]
+
+  @@unique([organizationId, platform, externalId])
+  @@map("advertiser_accounts")
+}
+
+// ========================
+// CAMPAIGNS
+// ========================
+
+model CampaignTemplate {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  platform       Platform
+  config         Json
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_templates")
+}
+
+model Campaign {
+  id                  String         @id @default(cuid())
+  organizationId      String         @map("organization_id")
+  advertiserAccountId String         @map("advertiser_account_id")
+  platform            Platform
+  externalId          String?        @map("external_id")
+  name                String
+  status              CampaignStatus @default(DRAFT)
+  budget              Decimal?       @db.Decimal(14, 2)
+  config              Json?
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  advertiserAccount AdvertiserAccount @relation(fields: [advertiserAccountId], references: [id])
+  adGroups          AdGroup[]
+  reportsDaily      ReportDaily[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, platform])
+  @@map("campaigns")
+}
+
+model AdGroup {
+  id         String         @id @default(cuid())
+  campaignId String         @map("campaign_id")
+  externalId String?        @map("external_id")
+  name       String
+  status     CampaignStatus @default(DRAFT)
+  budget     Decimal?       @db.Decimal(14, 2)
+  config     Json?
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  ads      Ad[]
+
+  @@map("ad_groups")
+}
+
+model Ad {
+  id         String         @id @default(cuid())
+  adGroupId  String         @map("ad_group_id")
+  externalId String?        @map("external_id")
+  name       String
+  status     CampaignStatus @default(DRAFT)
+  config     Json?
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  adGroup   AdGroup    @relation(fields: [adGroupId], references: [id], onDelete: Cascade)
+  creatives Creative[]
+
+  @@map("ads")
+}
+
+model Creative {
+  id           String   @id @default(cuid())
+  adId         String   @map("ad_id")
+  type         String   // image, video
+  gcsUrl       String   @map("gcs_url")
+  externalId   String?  @map("external_id")
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("creatives")
+}
+
+// ========================
+// CAMPAIGN JOBS (QUEUE)
+// ========================
+
+model CampaignJob {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  bullJobId      String?   @map("bull_job_id")
+  platform       Platform
+  status         JobStatus @default(PENDING)
+  totalItems     Int       @default(0) @map("total_items")
+  completedItems Int       @default(0) @map("completed_items")
+  failedItems    Int       @default(0) @map("failed_items")
+  payload        Json?
+  error          String?
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        CampaignJobItem[]
+
+  @@index([organizationId, status])
+  @@map("campaign_jobs")
+}
+
+model CampaignJobItem {
+  id         String    @id @default(cuid())
+  jobId      String    @map("job_id")
+  status     JobStatus @default(PENDING)
+  payload    Json?
+  result     Json?
+  error      String?
+  attempts   Int       @default(0)
+  processedAt DateTime? @map("processed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  job CampaignJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, status])
+  @@map("campaign_job_items")
+}
+
+// ========================
+// METRICS / REPORTS
+// ========================
+
+model ReportDaily {
+  id                  String   @id @default(cuid())
+  organizationId      String   @map("organization_id")
+  advertiserAccountId String   @map("advertiser_account_id")
+  campaignId          String?  @map("campaign_id")
+  platform            Platform
+  date                DateTime @db.Date
+  impressions         BigInt   @default(0)
+  clicks              BigInt   @default(0)
+  spend               Decimal  @default(0) @db.Decimal(14, 4)
+  conversions         Int      @default(0)
+  revenue             Decimal  @default(0) @db.Decimal(14, 4)
+  cpa                 Decimal? @db.Decimal(14, 4)
+  roas                Decimal? @db.Decimal(10, 4)
+  ctr                 Decimal? @db.Decimal(10, 6)
+  cpc                 Decimal? @db.Decimal(14, 4)
+  cpm                 Decimal? @db.Decimal(14, 4)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  advertiserAccount AdvertiserAccount @relation(fields: [advertiserAccountId], references: [id], onDelete: Cascade)
+  campaign          Campaign?         @relation(fields: [campaignId], references: [id])
+
+  @@unique([advertiserAccountId, campaignId, date])
+  @@index([organizationId, date])
+  @@map("reports_daily")
+}
+
+// ========================
+// AUTOMATIONS
+// ========================
+
+model AutomationRule {
+  id             String              @id @default(cuid())
+  organizationId String              @map("organization_id")
+  name           String
+  platform       Platform?
+  condition      AutomationCondition
+  conditionValue Decimal             @map("condition_value") @db.Decimal(14, 4)
+  action         AutomationAction
+  actionValue    Decimal?            @map("action_value") @db.Decimal(14, 4)
+  isActive       Boolean             @default(true) @map("is_active")
+  checkInterval  Int                 @default(60) @map("check_interval") // minutes
+  lastRunAt      DateTime?           @map("last_run_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  logs         AutomationLog[]
+
+  @@index([organizationId, isActive])
+  @@map("automation_rules")
+}
+
+model AutomationLog {
+  id        String   @id @default(cuid())
+  ruleId    String   @map("rule_id")
+  triggered Boolean
+  detail    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId, createdAt])
+  @@map("automation_logs")
+}
+
+// ========================
+// NOTIFICATIONS / ALERTS
+// ========================
+
+model Notification {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  userId         String?     @map("user_id")
+  channel        AlertChannel
+  title          String
+  body           String
+  payload        Json?
+  sentAt         DateTime?   @map("sent_at")
+  readAt         DateTime?   @map("read_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, readAt])
+  @@map("notifications")
+}
+
+model NotificationConfig {
+  id               String   @id @default(cuid())
+  organizationId   String   @unique @map("organization_id")
+  discordWebhook   String?  @map("discord_webhook")
+  telegramBotToken String?  @map("telegram_bot_token")
+  telegramChatId   String?  @map("telegram_chat_id")
+  webhookUrl       String?  @map("webhook_url")
+  webhookSecret    String?  @map("webhook_secret")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_configs")
+}
+
+// ========================
+// AUDIT
+// ========================
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  userId         String?     @map("user_id")
+  action         AuditAction
+  resource       String?
+  resourceId     String?     @map("resource_id")
+  metadata       Json?
+  ipAddress      String?     @map("ip_address")
+  userAgent      String?     @map("user_agent")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, action])
+  @@map("audit_logs")
+}
