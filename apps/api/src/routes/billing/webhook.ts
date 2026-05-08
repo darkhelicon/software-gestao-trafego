@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import type { PrismaClient, PlanSlug, SubscriptionStatus } from "@adflow/database";
-import { Prisma } from "@adflow/database";
+import type { PrismaClient, PlanSlug, SubscriptionStatus } from "@helzo-scale/database";
+import { Prisma } from "@helzo-scale/database";
 import type Stripe from "stripe";
 import { stripe } from "../../lib/stripe.js";
 

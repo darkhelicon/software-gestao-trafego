@@ -1,5 +1,5 @@
-import { prisma } from "@adflow/database";
-import { refreshTikTokToken, refreshMetaToken, encrypt } from "@adflow/integrations";
+import { prisma } from "@helzo-scale/database";
+import { refreshTikTokToken, refreshMetaToken, encrypt } from "@helzo-scale/integrations";
 
 // Runs hourly via cron registered in worker index
 export async function refreshExpiringTokens(): Promise<void> {

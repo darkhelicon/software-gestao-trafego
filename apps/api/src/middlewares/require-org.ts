@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { OrgRole } from "@adflow/database";
+import type { OrgRole } from "@helzo-scale/database";
 import { isDemoMode, DEMO_ORG_ID, DEMO_ORG_ROLE } from "../lib/demo-mode.js";
 
 declare module "fastify" {

@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@adflow/database";
+import type { PrismaClient } from "@helzo-scale/database";
 import type { Redis } from "ioredis";
-import type { QuotaResource } from "@adflow/types";
+import type { QuotaResource } from "@helzo-scale/types";
 
 const TTL_SECONDS = 3600; // 1 hour cache per day bucket
 
@@ -18,7 +18,7 @@ export async function getQuotaLimit(
   resource: QuotaResource
 ): Promise<number> {
   const plan = await prisma.plan.findUnique({
-    where: { slug: planSlug as import("@adflow/database").PlanSlug },
+    where: { slug: planSlug as import("@helzo-scale/database").PlanSlug },
     select: {
       quotaLimits: {
         where: { resource },

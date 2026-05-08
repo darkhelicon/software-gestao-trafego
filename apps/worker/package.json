@@ -1,5 +1,5 @@
 {
-  "name": "@adflow/worker",
+  "name": "@helzo-scale/worker",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@adflow/config": "workspace:*",
-    "@adflow/database": "workspace:*",
-    "@adflow/integrations": "workspace:*",
-    "@adflow/types": "workspace:*",
+    "@helzo-scale/config": "workspace:*",
+    "@helzo-scale/database": "workspace:*",
+    "@helzo-scale/integrations": "workspace:*",
+    "@helzo-scale/types": "workspace:*",
     "@sentry/node": "^10.52.0",
     "bullmq": "^5.27.0",
     "ioredis": "^5.4.1"

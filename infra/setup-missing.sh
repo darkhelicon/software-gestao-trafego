@@ -13,7 +13,7 @@ set -euo pipefail
 PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID is required}"
 REGION="${GCP_REGION:-us-central1}"
 SQL_PASSWORD="${SQL_PASSWORD:?SQL_PASSWORD is required (ex: export SQL_PASSWORD=SenhaForte123!)}"
-APP_NAME="adflow"
+APP_NAME="helzo-scale"
 
 gcloud config set project "$PROJECT_ID"
 
@@ -42,8 +42,8 @@ gcloud sql users set-password postgres \
 echo "  ✓ Senha definida para usuário postgres"
 
 CONN_NAME="${PROJECT_ID}:${REGION}:${APP_NAME}-postgres"
-DB_SOCKET_URL="postgresql://postgres:${SQL_PASSWORD}@localhost/adflow?host=/cloudsql/${CONN_NAME}"
-DB_PROXY_URL="postgresql://postgres:${SQL_PASSWORD}@localhost:5432/adflow"
+DB_SOCKET_URL="postgresql://postgres:${SQL_PASSWORD}@localhost/helzoscale?host=/cloudsql/${CONN_NAME}"
+DB_PROXY_URL="postgresql://postgres:${SQL_PASSWORD}@localhost:5432/helzoscale"
 
 # ── 3. Secret Manager: DATABASE_URL e REDIS_URL ───────────────────────────────
 echo ""
@@ -59,32 +59,32 @@ upsert_secret() {
   echo "  ✓ $name"
 }
 
-upsert_secret "adflow-database_url" "$DB_SOCKET_URL"
-upsert_secret "adflow-redis_url"    "$REDIS_URL"
+upsert_secret "helzo-scale-database_url" "$DB_SOCKET_URL"
+upsert_secret "helzo-scale-redis_url"    "$REDIS_URL"
 
 # ── 4. Gerar ENCRYPTION_KEY se ainda não existir ─────────────────────────────
 echo ""
 echo "=== 4. Gerando ENCRYPTION_KEY (AES-256) ==="
-if ! gcloud secrets versions access latest --secret="adflow-encryption_key" --project="$PROJECT_ID" &>/dev/null; then
+if ! gcloud secrets versions access latest --secret="helzo-scale-encryption_key" --project="$PROJECT_ID" &>/dev/null; then
   ENC_KEY=$(openssl rand -hex 32)
-  upsert_secret "adflow-encryption_key" "$ENC_KEY"
+  upsert_secret "helzo-scale-encryption_key" "$ENC_KEY"
   echo "  Chave gerada: ${ENC_KEY}"
   echo "  GUARDE ESTA CHAVE — ela criptografa os tokens OAuth"
 else
-  echo "  ✓ adflow-encryption_key já existe"
+  echo "  ✓ helzo-scale-encryption_key já existe"
 fi
 
 # ── 5. Placeholders para TikTok/Meta (serão substituídos depois) ──────────────
 echo ""
 echo "=== 5. Placeholders para TikTok e Meta ==="
-for secret in adflow-tiktok_app_id adflow-tiktok_app_secret adflow-meta_app_id adflow-meta_app_secret; do
+for secret in helzo-scale-tiktok_app_id helzo-scale-tiktok_app_secret helzo-scale-meta_app_id helzo-scale-meta_app_secret; do
   if ! gcloud secrets versions access latest --secret="$secret" --project="$PROJECT_ID" &>/dev/null; then
     upsert_secret "$secret" "PLACEHOLDER_UPDATE_AFTER_APPROVAL"
   else
     echo "  (${secret} já existe)"
   fi
 done
-for uri_secret in adflow-tiktok_redirect_uri adflow-meta_redirect_uri; do
+for uri_secret in helzo-scale-tiktok_redirect_uri helzo-scale-meta_redirect_uri; do
   if ! gcloud secrets versions access latest --secret="$uri_secret" --project="$PROJECT_ID" &>/dev/null; then
     upsert_secret "$uri_secret" "https://PLACEHOLDER/oauth/callback"
   else
@@ -93,16 +93,16 @@ for uri_secret in adflow-tiktok_redirect_uri adflow-meta_redirect_uri; do
 done
 
 # ── 6. SENTRY_DSN placeholder ─────────────────────────────────────────────────
-if ! gcloud secrets versions access latest --secret="adflow-sentry_dsn" --project="$PROJECT_ID" &>/dev/null; then
-  upsert_secret "adflow-sentry_dsn" ""
+if ! gcloud secrets versions access latest --secret="helzo-scale-sentry_dsn" --project="$PROJECT_ID" &>/dev/null; then
+  upsert_secret "helzo-scale-sentry_dsn" ""
 fi
 
 # ── 7. GCP Project ID e Bucket ────────────────────────────────────────────────
 echo ""
 echo "=== 6. GCP_PROJECT_ID e GCP_BUCKET_NAME ==="
 BUCKET_NAME="${PROJECT_ID}-${APP_NAME}-assets"
-upsert_secret "adflow-gcp_project_id"  "$PROJECT_ID"
-upsert_secret "adflow-gcp_bucket_name" "$BUCKET_NAME"
+upsert_secret "helzo-scale-gcp_project_id"  "$PROJECT_ID"
+upsert_secret "helzo-scale-gcp_bucket_name" "$BUCKET_NAME"
 
 # ── Saída: próximos passos ────────────────────────────────────────────────────
 echo ""
@@ -132,7 +132,7 @@ echo "   bash infra/make-public.sh"
 echo "   (torna API e Web acessíveis publicamente)"
 echo ""
 echo "6. Pegue as URLs dos serviços e atualize:"
-echo "   gcloud run services describe adflow-api --region=${REGION} --format='value(status.url)'"
-echo "   gcloud run services describe adflow-web --region=${REGION} --format='value(status.url)'"
+echo "   gcloud run services describe helzo-scale-api --region=${REGION} --format='value(status.url)'"
+echo "   gcloud run services describe helzo-scale-web --region=${REGION} --format='value(status.url)'"
 echo "   Depois execute: bash infra/update-urls.sh <API_URL> <WEB_URL>"
 echo ""

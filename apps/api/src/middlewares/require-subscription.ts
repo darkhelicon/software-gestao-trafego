@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { PlanSlug, SubscriptionStatus } from "@adflow/database";
+import type { PlanSlug, SubscriptionStatus } from "@helzo-scale/database";
 import { isDemoMode, DEMO_PLAN_SLUG, DEMO_SUBSCRIPTION_STATUS } from "../lib/demo-mode.js";
 
 const ACTIVE_STATUSES: SubscriptionStatus[] = ["TRIALING", "ACTIVE"];

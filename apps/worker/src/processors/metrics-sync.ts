@@ -1,9 +1,9 @@
 import type { Job } from "bullmq";
-import { prisma } from "@adflow/database";
+import { prisma } from "@helzo-scale/database";
 import {
   tiktokGetDailyReport,
   metaGetAccountInsights,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";
 
 interface MetricsSyncPayload {
   organizationId: string;

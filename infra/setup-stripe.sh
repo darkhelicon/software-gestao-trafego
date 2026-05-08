@@ -24,12 +24,12 @@ upsert_secret() {
 }
 
 echo "Configurando secrets do Stripe..."
-upsert_secret "adflow-stripe_secret_key"       "$STRIPE_SECRET_KEY"
-upsert_secret "adflow-stripe_webhook_secret"   "$STRIPE_WEBHOOK_SECRET"
-upsert_secret "adflow-stripe_price_start"      "$STRIPE_PRICE_START"
-upsert_secret "adflow-stripe_price_growth"     "$STRIPE_PRICE_GROWTH"
-upsert_secret "adflow-stripe_price_scale"      "$STRIPE_PRICE_SCALE"
-upsert_secret "adflow-stripe_price_enterprise" "$STRIPE_PRICE_ENTERPRISE"
+upsert_secret "helzo-scale-stripe_secret_key"       "$STRIPE_SECRET_KEY"
+upsert_secret "helzo-scale-stripe_webhook_secret"   "$STRIPE_WEBHOOK_SECRET"
+upsert_secret "helzo-scale-stripe_price_start"      "$STRIPE_PRICE_START"
+upsert_secret "helzo-scale-stripe_price_growth"     "$STRIPE_PRICE_GROWTH"
+upsert_secret "helzo-scale-stripe_price_scale"      "$STRIPE_PRICE_SCALE"
+upsert_secret "helzo-scale-stripe_price_enterprise" "$STRIPE_PRICE_ENTERPRISE"
 
 echo ""
 echo "Stripe secrets configurados com sucesso."

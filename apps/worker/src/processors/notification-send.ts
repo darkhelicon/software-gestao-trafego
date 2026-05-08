@@ -1,5 +1,5 @@
 import type { Job } from "bullmq";
-import { prisma } from "@adflow/database";
+import { prisma } from "@helzo-scale/database";
 import { createHmac } from "crypto";
 import { isIP } from "net";
 
@@ -114,14 +114,14 @@ export async function processNotificationSend(job: Job<NotificationPayload>) {
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        "X-AdFlow-Timestamp": timestamp,
+        "X-HelzoScale-Timestamp": timestamp,
       };
 
       if (config.webhookSecret) {
         const sig = createHmac("sha256", config.webhookSecret)
           .update(webhookBody)
           .digest("hex");
-        headers["X-AdFlow-Signature"] = `sha256=${sig}`;
+        headers["X-HelzoScale-Signature"] = `sha256=${sig}`;
       }
 
       const res = await fetch(config.webhookUrl, { method: "POST", headers, body: webhookBody });

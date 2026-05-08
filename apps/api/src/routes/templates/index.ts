@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { Prisma } from "@adflow/database";
+import { Prisma } from "@helzo-scale/database";
 import {
   authenticate,
   requireOrg,

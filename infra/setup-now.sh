@@ -27,19 +27,19 @@ upsert() {
 
 # ── Redis ──────────────────────────────────────────────────────────────────────
 echo "=== Redis ==="
-upsert "adflow-redis_url" "redis://10.4.56.35:6379"
+upsert "helzo-scale-redis_url" "redis://10.4.56.35:6379"
 
 # ── Cloud SQL ──────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Cloud SQL ==="
-CONN_NAME="${PROJECT_ID}:${REGION}:adflow-postgres"
+CONN_NAME="${PROJECT_ID}:${REGION}:helzo-scale-postgres"
 
 # URL para Cloud Run (via Unix socket do Cloud SQL sidecar)
-DB_SOCKET="postgresql://postgres:${SQL_PASSWORD}@localhost/adflow?host=/cloudsql/${CONN_NAME}"
+DB_SOCKET="postgresql://postgres:${SQL_PASSWORD}@localhost/helzoscale?host=/cloudsql/${CONN_NAME}"
 # URL para migration (via Cloud SQL Auth Proxy na porta 5432)
-DB_PROXY="postgresql://postgres:${SQL_PASSWORD}@localhost:5432/adflow"
+DB_PROXY="postgresql://postgres:${SQL_PASSWORD}@localhost:5432/helzoscale"
 
-upsert "adflow-database_url" "$DB_SOCKET"
+upsert "helzo-scale-database_url" "$DB_SOCKET"
 
 echo ""
 echo "  MIGRATION_DATABASE_URL (para o GitHub Secret):"
@@ -50,47 +50,47 @@ echo "  $CONN_NAME"
 # ── GCP infra ──────────────────────────────────────────────────────────────────
 echo ""
 echo "=== GCP info ==="
-upsert "adflow-gcp_project_id"  "$PROJECT_ID"
-upsert "adflow-gcp_bucket_name" "${PROJECT_ID}-adflow-assets"
+upsert "helzo-scale-gcp_project_id"  "$PROJECT_ID"
+upsert "helzo-scale-gcp_bucket_name" "${PROJECT_ID}-helzo-scale-assets"
 
 # ── Gerar ENCRYPTION_KEY se não existe ────────────────────────────────────────
 echo ""
 echo "=== Encryption Key ==="
-if gcloud secrets versions access latest --secret="adflow-encryption_key" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  echo "  ✓ adflow-encryption_key já existe"
+if gcloud secrets versions access latest --secret="helzo-scale-encryption_key" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  echo "  ✓ helzo-scale-encryption_key já existe"
 else
   ENC_KEY=$(openssl rand -hex 32)
-  upsert "adflow-encryption_key" "$ENC_KEY"
+  upsert "helzo-scale-encryption_key" "$ENC_KEY"
   echo "  GUARDE: ENCRYPTION_KEY = $ENC_KEY"
 fi
 
 # ── Gerar JWT secrets se não existem ─────────────────────────────────────────
 echo ""
 echo "=== JWT Secrets ==="
-if gcloud secrets versions access latest --secret="adflow-jwt_secret" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  echo "  ✓ adflow-jwt_secret já existe"
+if gcloud secrets versions access latest --secret="helzo-scale-jwt_secret" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  echo "  ✓ helzo-scale-jwt_secret já existe"
 else
   JWT_SECRET=$(openssl rand -base64 48)
-  upsert "adflow-jwt_secret" "$JWT_SECRET"
+  upsert "helzo-scale-jwt_secret" "$JWT_SECRET"
 fi
-if gcloud secrets versions access latest --secret="adflow-jwt_refresh_secret" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  echo "  ✓ adflow-jwt_refresh_secret já existe"
+if gcloud secrets versions access latest --secret="helzo-scale-jwt_refresh_secret" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  echo "  ✓ helzo-scale-jwt_refresh_secret já existe"
 else
   JWT_REFRESH=$(openssl rand -base64 48)
-  upsert "adflow-jwt_refresh_secret" "$JWT_REFRESH"
+  upsert "helzo-scale-jwt_refresh_secret" "$JWT_REFRESH"
 fi
 
 # ── TikTok / Meta — placeholders (serão atualizados quando o site estiver no ar) ──
 echo ""
 echo "=== TikTok / Meta (placeholders) ==="
-for s in adflow-tiktok_app_id adflow-tiktok_app_secret adflow-meta_app_id adflow-meta_app_secret; do
+for s in helzo-scale-tiktok_app_id helzo-scale-tiktok_app_secret helzo-scale-meta_app_id helzo-scale-meta_app_secret; do
   if ! gcloud secrets versions access latest --secret="$s" --project="$PROJECT_ID" &>/dev/null 2>&1; then
     upsert "$s" "PLACEHOLDER_UPDATE_AFTER_APPROVAL"
   else
     echo "  ✓ $s já existe"
   fi
 done
-for s in adflow-tiktok_redirect_uri adflow-meta_redirect_uri; do
+for s in helzo-scale-tiktok_redirect_uri helzo-scale-meta_redirect_uri; do
   if ! gcloud secrets versions access latest --secret="$s" --project="$PROJECT_ID" &>/dev/null 2>&1; then
     upsert "$s" "https://PLACEHOLDER/oauth/callback"
   else
@@ -101,24 +101,24 @@ done
 # ── Sentry DSN placeholder ────────────────────────────────────────────────────
 echo ""
 echo "=== Sentry ==="
-if ! gcloud secrets versions access latest --secret="adflow-sentry_dsn" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  upsert "adflow-sentry_dsn" ""
+if ! gcloud secrets versions access latest --secret="helzo-scale-sentry_dsn" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  upsert "helzo-scale-sentry_dsn" ""
 else
-  echo "  ✓ adflow-sentry_dsn já existe"
+  echo "  ✓ helzo-scale-sentry_dsn já existe"
 fi
 
 # ── CORS placeholders (atualizar após deploy com infra/update-urls.sh) ─────────
 echo ""
 echo "=== CORS (placeholders iniciais) ==="
-if ! gcloud secrets versions access latest --secret="adflow-allowed_origins" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  upsert "adflow-allowed_origins" "https://PLACEHOLDER_WEB_URL"
+if ! gcloud secrets versions access latest --secret="helzo-scale-allowed_origins" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  upsert "helzo-scale-allowed_origins" "https://PLACEHOLDER_WEB_URL"
 else
-  echo "  ✓ adflow-allowed_origins já existe"
+  echo "  ✓ helzo-scale-allowed_origins já existe"
 fi
-if ! gcloud secrets versions access latest --secret="adflow-frontend_url" --project="$PROJECT_ID" &>/dev/null 2>&1; then
-  upsert "adflow-frontend_url" "https://PLACEHOLDER_WEB_URL"
+if ! gcloud secrets versions access latest --secret="helzo-scale-frontend_url" --project="$PROJECT_ID" &>/dev/null 2>&1; then
+  upsert "helzo-scale-frontend_url" "https://PLACEHOLDER_WEB_URL"
 else
-  echo "  ✓ adflow-frontend_url já existe"
+  echo "  ✓ helzo-scale-frontend_url já existe"
 fi
 
 # ── Resumo final ──────────────────────────────────────────────────────────────

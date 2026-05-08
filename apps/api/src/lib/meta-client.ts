@@ -10,11 +10,11 @@ export {
   metaGetCampaigns as getCampaigns,
   encrypt,
   decrypt,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";
 
 export type {
   MetaTokens,
   MetaBusinessManager,
   MetaAdAccount,
   MetaCampaignPayload,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";

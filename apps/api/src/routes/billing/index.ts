@@ -56,6 +56,13 @@ export const billingRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
+      if (!stripe) {
+        return reply.status(503).send({
+          success: false,
+          error: "Pagamentos não disponíveis no momento. Tente mais tarde.",
+        });
+      }
+
       const { planSlug, successUrl, cancelUrl } = body.data;
       const priceId = STRIPE_PRICES[planSlug];
 
@@ -132,6 +139,13 @@ export const billingRoutes: FastifyPluginAsync = async (app) => {
         where: { organizationId: request.organizationId },
         select: { stripeCustomerId: true },
       });
+
+      if (!stripe) {
+        return reply.status(503).send({
+          success: false,
+          error: "Pagamentos não disponíveis no momento. Tente mais tarde.",
+        });
+      }
 
       if (!subscription?.stripeCustomerId) {
         return reply.status(400).send({

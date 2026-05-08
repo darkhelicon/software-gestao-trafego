@@ -1,12 +1,12 @@
 import type { Job } from "bullmq";
-import { prisma } from "@adflow/database";
+import { prisma } from "@helzo-scale/database";
 import {
   tiktokCreateCampaign,
   refreshTikTokToken,
   metaCreateCampaign,
   refreshMetaToken,
   encrypt,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";
 
 interface CampaignCreateJobData {
   jobId: string;

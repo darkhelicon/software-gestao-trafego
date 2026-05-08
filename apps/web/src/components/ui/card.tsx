@@ -9,7 +9,7 @@ export function Card({ className, highlight, children, ...props }: CardProps) {
     <div
       className={clsx(
         "rounded-xl border bg-white p-6 shadow-sm",
-        highlight && "border-blue-500 ring-2 ring-blue-500/20",
+        highlight && "border-brand-400 ring-2 ring-brand-400/20",
         !highlight && "border-gray-200",
         className
       )}

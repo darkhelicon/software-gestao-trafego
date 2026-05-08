@@ -1,11 +1,11 @@
 import type { Job } from "bullmq";
-import { prisma } from "@adflow/database";
+import { prisma } from "@helzo-scale/database";
 import {
   tiktokUpdateCampaignStatus,
   tiktokUpdateCampaignBudget,
   metaUpdateCampaignStatus,
   metaUpdateCampaignBudget,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";
 
 interface EvaluatePayload {
   ruleId: string;

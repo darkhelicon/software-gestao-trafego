@@ -44,6 +44,10 @@ export function PlanCard({
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSelect() {
+    if (!currentOrg?.id) {
+      window.location.href = "/login";
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await api.post<{ url: string }>(
@@ -53,11 +57,13 @@ export function PlanCard({
           successUrl: `${window.location.origin}/dashboard?subscribed=true`,
           cancelUrl: `${window.location.origin}/billing`,
         },
-        { organizationId: currentOrg?.id }
+        { organizationId: currentOrg.id }
       );
       window.location.href = data.url;
-    } catch {
-      alert("Erro ao iniciar checkout. Tente novamente.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Erro ao iniciar checkout.";
+      alert(message + " Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +75,7 @@ export function PlanCard({
         <div className="flex items-center justify-between mb-1">
           <CardTitle>{name}</CardTitle>
           {isPopular && (
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-black bg-brand-400 px-2 py-0.5 rounded-full">
               Mais popular
             </span>
           )}

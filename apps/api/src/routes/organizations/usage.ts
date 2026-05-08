@@ -5,7 +5,7 @@ import {
   requireSubscription,
 } from "../../middlewares/index.js";
 import { getAllQuotaUsage, getQuotaLimit } from "../../lib/quota.js";
-import type { QuotaResource } from "@adflow/types";
+import type { QuotaResource } from "@helzo-scale/types";
 
 const RESOURCES: QuotaResource[] = [
   "campaigns_per_day",

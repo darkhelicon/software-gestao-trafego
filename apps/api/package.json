@@ -1,5 +1,5 @@
 {
-  "name": "@adflow/api",
+  "name": "@helzo-scale/api",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@adflow/config": "workspace:*",
-    "@adflow/database": "workspace:*",
-    "@adflow/integrations": "workspace:*",
-    "@adflow/types": "workspace:*",
+    "@helzo-scale/config": "workspace:*",
+    "@helzo-scale/database": "workspace:*",
+    "@helzo-scale/integrations": "workspace:*",
+    "@helzo-scale/types": "workspace:*",
     "@fastify/cors": "^10.0.1",
     "@fastify/helmet": "^13.0.0",
     "@fastify/jwt": "^9.0.1",

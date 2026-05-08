@@ -33,9 +33,9 @@ upsert_secret() {
   echo "  ✓ $name"
 }
 
-upsert_secret "adflow-firebase_project_id"   "$FB_PROJECT"
-upsert_secret "adflow-firebase_client_email" "$CLIENT_EMAIL"
-upsert_secret "adflow-firebase_private_key"  "$PRIVATE_KEY"
+upsert_secret "helzo-scale-firebase_project_id"   "$FB_PROJECT"
+upsert_secret "helzo-scale-firebase_client_email" "$CLIENT_EMAIL"
+upsert_secret "helzo-scale-firebase_private_key"  "$PRIVATE_KEY"
 
 echo ""
 echo "Firebase Admin secrets configurados com sucesso."

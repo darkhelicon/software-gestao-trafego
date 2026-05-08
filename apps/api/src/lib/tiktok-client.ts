@@ -10,11 +10,11 @@ export {
   tiktokGetCampaigns as getCampaigns,
   encrypt,
   decrypt,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";
 
 export type {
   TikTokTokens,
   TikTokBusinessCenter,
   TikTokAdvertiserAccount,
   TikTokCampaignPayload,
-} from "@adflow/integrations";
+} from "@helzo-scale/integrations";

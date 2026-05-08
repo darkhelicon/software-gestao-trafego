@@ -1,5 +1,5 @@
 {
-  "name": "adflow",
+  "name": "helzo-scale",
   "private": true,
   "version": "0.0.1",
   "packageManager": "pnpm@9.15.4",
@@ -10,13 +10,13 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:demo": "turbo run build --filter=@adflow/config --filter=@adflow/types --filter=@adflow/integrations --filter=@adflow/database && turbo run dev --filter=@adflow/api --filter=@adflow/web",
+    "dev:demo": "turbo run build --filter=@helzo-scale/config --filter=@helzo-scale/types --filter=@helzo-scale/integrations --filter=@helzo-scale/database && turbo run dev --filter=@helzo-scale/api --filter=@helzo-scale/web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "db:generate": "pnpm --filter @adflow/database db:generate",
-    "db:migrate": "pnpm --filter @adflow/database db:migrate",
-    "db:push": "pnpm --filter @adflow/database db:push",
-    "db:studio": "pnpm --filter @adflow/database db:studio"
+    "db:generate": "pnpm --filter @helzo-scale/database db:generate",
+    "db:migrate": "pnpm --filter @helzo-scale/database db:migrate",
+    "db:push": "pnpm --filter @helzo-scale/database db:push",
+    "db:studio": "pnpm --filter @helzo-scale/database db:studio"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Routes that never require authentication
-const PUBLIC_PATHS = ["/login", "/register", "/api/"];
+// Exact-match public routes
+const PUBLIC_EXACT = ["/"];
+// Prefix-match public routes
+const PUBLIC_PREFIXES = ["/login", "/register", "/api/"];
 
 export function middleware(request: NextRequest) {
   // Demo mode: bypass all auth checks and set a presence cookie so the
@@ -22,7 +24,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Always allow public paths and Next.js internals
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (
+    PUBLIC_EXACT.includes(pathname) ||
+    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
     return NextResponse.next();
   }
 

@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "./queues/index.js";
-import { prisma } from "@adflow/database";
+import { prisma } from "@helzo-scale/database";
 import { initSentry, captureJobException, flushSentry } from "./lib/sentry.js";
 
 initSentry();

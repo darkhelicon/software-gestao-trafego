@@ -1,5 +1,5 @@
-import type { PrismaClient, AuditAction } from "@adflow/database";
-import { Prisma } from "@adflow/database";
+import type { PrismaClient, AuditAction } from "@helzo-scale/database";
+import { Prisma } from "@helzo-scale/database";
 
 interface AuditParams {
   prisma: PrismaClient;

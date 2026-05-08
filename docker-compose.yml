@@ -1,25 +1,25 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: adflow_postgres
+    container_name: helzoscale_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: adflow
-      POSTGRES_PASSWORD: adflow
-      POSTGRES_DB: adflow
+      POSTGRES_USER: helzoscale
+      POSTGRES_PASSWORD: helzoscale
+      POSTGRES_DB: helzoscale
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U adflow"]
+      test: ["CMD-SHELL", "pg_isready -U helzoscale"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: adflow_redis
+    container_name: helzoscale_redis
     restart: unless-stopped
     command: redis-server --save 60 1 --loglevel warning
     ports:
@@ -37,12 +37,12 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       target: development
-    container_name: adflow_api
+    container_name: helzoscale_api
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: "postgresql://adflow:adflow@postgres:5432/adflow?schema=public"
+      DATABASE_URL: "postgresql://helzoscale:helzoscale@postgres:5432/helzoscale?schema=public"
       REDIS_URL: "redis://redis:6379"
     ports:
       - "3001:3001"
@@ -61,12 +61,12 @@ services:
       context: .
       dockerfile: apps/worker/Dockerfile
       target: development
-    container_name: adflow_worker
+    container_name: helzoscale_worker
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: "postgresql://adflow:adflow@postgres:5432/adflow?schema=public"
+      DATABASE_URL: "postgresql://helzoscale:helzoscale@postgres:5432/helzoscale?schema=public"
       REDIS_URL: "redis://redis:6379"
     volumes:
       - .:/app

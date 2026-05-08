@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@adflow/database";
+import type { PrismaClient } from "@helzo-scale/database";
 import * as fx from "./fixtures.js";
 
 type AnyArgs = Record<string, unknown>;

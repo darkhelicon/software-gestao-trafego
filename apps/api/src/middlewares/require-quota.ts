@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import type { QuotaResource } from "@adflow/types";
+import type { QuotaResource } from "@helzo-scale/types";
 import {
   getQuotaLimit,
   getQuotaUsed,

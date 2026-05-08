@@ -6,7 +6,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AdFlow — Gestão de TikTok e Meta Ads",
+  title: "Helzo Scale — Gestão de TikTok e Meta Ads",
   description: "Plataforma enterprise de gestão de campanhas digitais",
 };
 

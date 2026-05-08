@@ -1,5 +1,5 @@
-import type { PrismaClient, PlanSlug } from "@adflow/database";
-import { PLAN_FEATURES } from "@adflow/types";
+import type { PrismaClient, PlanSlug } from "@helzo-scale/database";
+import { PLAN_FEATURES } from "@helzo-scale/types";
 
 export async function hasFeature(
   prisma: PrismaClient,

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { Prisma } from "@adflow/database";
+import { Prisma } from "@helzo-scale/database";
 import {
   authenticate,
   requireOrg,
@@ -69,7 +69,7 @@ export const tiktokCampaignRoutes: FastifyPluginAsync = async (app) => {
       ...(query.advertiserAccountId && {
         advertiserAccountId: query.advertiserAccountId,
       }),
-      ...(query.status && { status: query.status as import("@adflow/database").CampaignStatus }),
+      ...(query.status && { status: query.status as import("@helzo-scale/database").CampaignStatus }),
     };
 
     const [campaigns, total] = await Promise.all([

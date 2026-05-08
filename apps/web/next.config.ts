@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // Enable by setting NEXT_STANDALONE=1 (the Dockerfile does this automatically).
   ...(process.env["NEXT_STANDALONE"] === "1" ? { output: "standalone" as const } : {}),
   reactStrictMode: true,
-  transpilePackages: ["@adflow/types"],
+  transpilePackages: ["@helzo-scale/types"],
   images: {
     remotePatterns: [
       {

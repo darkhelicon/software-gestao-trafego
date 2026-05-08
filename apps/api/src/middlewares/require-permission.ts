@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { ROLE_PERMISSIONS } from "@adflow/types";
-import type { Permission } from "@adflow/types";
+import { ROLE_PERMISSIONS } from "@helzo-scale/types";
+import type { Permission } from "@helzo-scale/types";
 
 export function requirePermission(permission: Permission) {
   return async function (

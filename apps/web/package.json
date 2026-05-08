@@ -1,5 +1,5 @@
 {
-  "name": "@adflow/web",
+  "name": "@helzo-scale/web",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@adflow/types": "workspace:*",
+    "@helzo-scale/types": "workspace:*",
     "@tanstack/react-query": "^5.62.16",
     "clsx": "^2.1.1",
     "firebase": "^11.1.0",

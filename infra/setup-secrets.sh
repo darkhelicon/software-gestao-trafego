@@ -1,5 +1,5 @@
 #!/bin/bash
-# Provisiona todos os secrets do AdFlow no GCP Secret Manager.
+# Provisiona todos os secrets do Helzo Scale no GCP Secret Manager.
 # Execute: bash infra/setup-secrets.sh
 # Pré-requisito: gcloud autenticado + PROJECT_ID definido.
 
@@ -90,22 +90,22 @@ echo ""
 echo "=== API Secrets ==="
 for key in "${API_SECRETS[@]}"; do
   value=$(get_env_value "$key")
-  upsert_secret "adflow-${key,,}" "$value"   # lowercase key as secret name
+  upsert_secret "helzo-scale-${key,,}" "$value"   # lowercase key as secret name
 done
 
 echo ""
 echo "=== Web Secrets ==="
 for key in "${WEB_SECRETS[@]}"; do
   value=$(get_env_value "$key")
-  upsert_secret "adflow-${key,,}" "$value"
+  upsert_secret "helzo-scale-${key,,}" "$value"
 done
 
 echo ""
 echo "=== Granting Secret Accessor to Service Accounts ==="
 
-API_SA="adflow-api-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-WORKER_SA="adflow-worker-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-WEB_SA="adflow-web-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+API_SA="helzo-scale-api-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+WORKER_SA="helzo-scale-worker-sa@${PROJECT_ID}.iam.gserviceaccount.com"
+WEB_SA="helzo-scale-web-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
 for sa in "$API_SA" "$WORKER_SA" "$WEB_SA"; do
   echo "  Granting secretAccessor to $sa"

@@ -23,18 +23,6 @@ importers:
 
   apps/api:
     dependencies:
-      '@adflow/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@adflow/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-      '@adflow/integrations':
-        specifier: workspace:*
-        version: link:../../packages/integrations
-      '@adflow/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -47,6 +35,18 @@ importers:
       '@fastify/rate-limit':
         specifier: ^10.2.1
         version: 10.3.0
+      '@helzo-scale/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@helzo-scale/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@helzo-scale/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
+      '@helzo-scale/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@sentry/node':
         specifier: ^10.52.0
         version: 10.52.0
@@ -90,7 +90,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@adflow/types':
+      '@helzo-scale/types':
         specifier: workspace:*
         version: link:../../packages/types
       '@tanstack/react-query':
@@ -154,16 +154,16 @@ importers:
 
   apps/worker:
     dependencies:
-      '@adflow/config':
+      '@helzo-scale/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@adflow/database':
+      '@helzo-scale/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@adflow/integrations':
+      '@helzo-scale/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
-      '@adflow/types':
+      '@helzo-scale/types':
         specifier: workspace:*
         version: link:../../packages/types
       '@sentry/node':

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script de setup inicial do GCP para o projeto AdFlow
+# Script de setup inicial do GCP para o projeto Helzo Scale
 # Execute: bash infra/setup-gcp.sh
 # Pré-requisito: GCP_PROJECT_ID, GCP_REGION, GITHUB_REPO (format: org/repo) definidos
 
@@ -8,7 +8,7 @@ set -euo pipefail
 PROJECT_ID="${GCP_PROJECT_ID:?GCP_PROJECT_ID is required}"
 REGION="${GCP_REGION:-us-central1}"
 GITHUB_REPO="${GITHUB_REPO:?GITHUB_REPO is required (format: org/repo)}"
-APP_NAME="adflow"
+APP_NAME="helzo-scale"
 
 echo "Setting up GCP project: $PROJECT_ID in $REGION"
 
@@ -35,7 +35,7 @@ echo "Creating Artifact Registry..."
 gcloud artifacts repositories create "$APP_NAME" \
   --repository-format=docker \
   --location="$REGION" \
-  --description="AdFlow container images" \
+  --description="Helzo Scale container images" \
   --quiet || true
 
 # Cloud SQL PostgreSQL
@@ -66,16 +66,16 @@ gcloud storage buckets create "gs://${PROJECT_ID}-${APP_NAME}-assets" \
 # ── Service accounts ──────────────────────────────────────────────────────────
 echo "Creating service accounts..."
 gcloud iam service-accounts create "${APP_NAME}-api-sa" \
-  --display-name="AdFlow API Service Account" --quiet || true
+  --display-name="Helzo Scale API Service Account" --quiet || true
 
 gcloud iam service-accounts create "${APP_NAME}-worker-sa" \
-  --display-name="AdFlow Worker Service Account" --quiet || true
+  --display-name="Helzo Scale Worker Service Account" --quiet || true
 
 gcloud iam service-accounts create "${APP_NAME}-web-sa" \
-  --display-name="AdFlow Web Service Account" --quiet || true
+  --display-name="Helzo Scale Web Service Account" --quiet || true
 
 gcloud iam service-accounts create "${APP_NAME}-github-sa" \
-  --display-name="AdFlow GitHub Actions Service Account" --quiet || true
+  --display-name="Helzo Scale GitHub Actions Service Account" --quiet || true
 
 # ── IAM bindings: API SA ──────────────────────────────────────────────────────
 API_SA="${APP_NAME}-api-sa@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -160,7 +160,7 @@ echo "  GCP_REGION                  = $REGION"
 echo "  GCP_SERVICE_ACCOUNT         = $GITHUB_SA"
 echo "  GCP_WORKLOAD_IDENTITY_PROVIDER = projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions/providers/github"
 echo "  CLOUD_SQL_INSTANCE_CONNECTION_NAME = ${PROJECT_ID}:${REGION}:${APP_NAME}-postgres"
-echo "  MIGRATION_DATABASE_URL      = postgresql://adflow:<password>@localhost:5432/adflow (used by Cloud SQL Auth Proxy)"
+echo "  MIGRATION_DATABASE_URL      = postgresql://helzoscale:<password>@localhost:5432/helzoscale (used by Cloud SQL Auth Proxy)"
 echo ""
 echo "Next steps:"
 echo "1. Run: bash infra/setup-secrets.sh"
