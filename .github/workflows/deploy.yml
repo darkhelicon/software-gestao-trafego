@@ -105,7 +105,7 @@ jobs:
             https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.13.0/cloud-sql-proxy.linux.amd64
           chmod +x cloud-sql-proxy
 
-      - name: Run database migrations
+      - name: Run database migrations and seed
         env:
           DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
         run: |
@@ -121,6 +121,8 @@ jobs:
 
           cd packages/database
           pnpm exec prisma migrate deploy
+          # Seed is idempotent (upsert) — safe to run on every deploy
+          pnpm exec tsx src/seed.ts
 
           kill "$PROXY_PID" 2>/dev/null || true
 
@@ -161,3 +163,14 @@ jobs:
             gcloud run services replace - \
               --region=${{ secrets.GCP_REGION }} \
               --quiet
+
+      # Allow unauthenticated access (public SaaS — both API and Web need to be reachable)
+      - name: Allow public access to API and Web
+        run: |
+          for service in adflow-api adflow-web; do
+            gcloud run services add-iam-policy-binding "$service" \
+              --region=${{ secrets.GCP_REGION }} \
+              --member="allUsers" \
+              --role="roles/run.invoker" \
+              --quiet
+          done
