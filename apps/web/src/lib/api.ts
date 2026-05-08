@@ -1,4 +1,5 @@
 import { auth } from "./firebase";
+import { DEMO_MODE } from "./demo-mode";
 
 const API_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
 
@@ -9,6 +10,16 @@ interface RequestOptions extends RequestInit {
 async function getAuthHeaders(
   organizationId?: string
 ): Promise<Record<string, string>> {
+  // Demo mode: skip Firebase token, signal demo identity via header
+  if (DEMO_MODE) {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Demo-Mode": "true",
+    };
+    if (organizationId) headers["X-Organization-Id"] = organizationId;
+    return headers;
+  }
+
   const user = auth.currentUser;
   if (!user) return {};
 

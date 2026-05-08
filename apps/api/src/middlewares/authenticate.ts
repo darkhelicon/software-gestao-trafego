@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { firebaseAuth } from "../lib/firebase-admin.js";
+import { isDemoMode, DEMO_USER_ID, DEMO_FIREBASE_UID, DEMO_USER_EMAIL } from "../lib/demo-mode.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -13,6 +14,13 @@ export async function authenticate(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  if (isDemoMode()) {
+    request.userId = DEMO_USER_ID;
+    request.firebaseUid = DEMO_FIREBASE_UID;
+    request.userEmail = DEMO_USER_EMAIL;
+    return;
+  }
+
   const authHeader = request.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {

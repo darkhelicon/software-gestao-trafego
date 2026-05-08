@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import type { OrgRole } from "@adflow/database";
+import { isDemoMode, DEMO_ORG_ID, DEMO_ORG_ROLE } from "../lib/demo-mode.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -12,6 +13,12 @@ export async function requireOrg(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  if (isDemoMode()) {
+    request.organizationId = DEMO_ORG_ID;
+    request.orgRole = DEMO_ORG_ROLE;
+    return;
+  }
+
   const orgId = request.headers["x-organization-id"] as string | undefined;
 
   if (!orgId) {

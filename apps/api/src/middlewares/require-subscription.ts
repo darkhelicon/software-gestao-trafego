@@ -1,5 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import type { PlanSlug, SubscriptionStatus } from "@adflow/database";
+import { isDemoMode, DEMO_PLAN_SLUG, DEMO_SUBSCRIPTION_STATUS } from "../lib/demo-mode.js";
 
 const ACTIVE_STATUSES: SubscriptionStatus[] = ["TRIALING", "ACTIVE"];
 
@@ -14,6 +15,12 @@ export async function requireSubscription(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  if (isDemoMode()) {
+    request.planSlug = DEMO_PLAN_SLUG;
+    request.subscriptionStatus = DEMO_SUBSCRIPTION_STATUS;
+    return;
+  }
+
   const subscription =
     await request.server.prisma.subscription.findUnique({
       where: { organizationId: request.organizationId },

@@ -5,6 +5,20 @@ import type { NextRequest } from "next/server";
 const PUBLIC_PATHS = ["/login", "/register", "/api/"];
 
 export function middleware(request: NextRequest) {
+  // Demo mode: bypass all auth checks and set a presence cookie so the
+  // app-layout can detect "authenticated" state without a real Firebase session.
+  if (process.env["DEMO_MODE"] === "true") {
+    const response = NextResponse.next();
+    if (!request.cookies.has("firebase-session")) {
+      response.cookies.set("firebase-session", "demo", {
+        path: "/",
+        maxAge: 86400,
+        sameSite: "lax",
+      });
+    }
+    return response;
+  }
+
   const { pathname } = request.nextUrl;
 
   // Always allow public paths and Next.js internals

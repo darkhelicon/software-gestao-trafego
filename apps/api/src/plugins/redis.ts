@@ -1,5 +1,7 @@
 import fp from "fastify-plugin";
 import { Redis } from "ioredis";
+import { isDemoMode } from "../lib/demo-mode.js";
+import { mockRedisClient } from "../mocks/redis.mock.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -8,6 +10,11 @@ declare module "fastify" {
 }
 
 export const redisPlugin = fp(async (app) => {
+  if (isDemoMode()) {
+    app.decorate("redis", mockRedisClient);
+    return;
+  }
+
   const redis = new Redis(process.env["REDIS_URL"] ?? "redis://localhost:6379", {
     maxRetriesPerRequest: 3,
     lazyConnect: true,

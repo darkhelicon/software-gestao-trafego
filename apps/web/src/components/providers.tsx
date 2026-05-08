@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { auth, onAuthStateChanged } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
 import { api } from "@/lib/api";
+import { DEMO_MODE, DEMO_ORG } from "@/lib/demo-mode";
 import type { OrgContext } from "@/store/auth";
 
 const queryClient = new QueryClient({
@@ -21,6 +22,14 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
     useAuthStore();
 
   useEffect(() => {
+    // Demo mode: inject fixed state, skip Firebase entirely
+    if (DEMO_MODE) {
+      setCurrentOrg(DEMO_ORG);
+      setLoading(false);
+      setInitialized(true);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         // Clear session cookie so middleware can redirect unauthenticated users
