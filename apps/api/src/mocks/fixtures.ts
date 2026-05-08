@@ -30,6 +30,12 @@ export const plans = [
     stripePriceId: null,
     createdAt: past(180),
     updatedAt: past(180),
+    quotaLimits: [
+      { resource: "campaigns_per_day", limit: 20 },
+      { resource: "ads_per_day", limit: 60 },
+      { resource: "business_centers", limit: 3 },
+      { resource: "advertiser_accounts", limit: -1 },
+    ],
   },
   {
     id: "plan-growth",
@@ -48,6 +54,12 @@ export const plans = [
     stripePriceId: null,
     createdAt: past(180),
     updatedAt: past(180),
+    quotaLimits: [
+      { resource: "campaigns_per_day", limit: 40 },
+      { resource: "ads_per_day", limit: 120 },
+      { resource: "business_centers", limit: 6 },
+      { resource: "advertiser_accounts", limit: -1 },
+    ],
   },
   {
     id: "plan-scale",
@@ -62,10 +74,16 @@ export const plans = [
     maxAdAccounts: 100,
     maxMonthlySpend: 500_000_00,
     isActive: true,
-    features: ["Tudo do Growth", "API access", "SLA prioritário"],
+    features: ["Tudo do Growth", "API access", "SLA prioritário", "Automação avançada"],
     stripePriceId: null,
     createdAt: past(180),
     updatedAt: past(180),
+    quotaLimits: [
+      { resource: "campaigns_per_day", limit: 80 },
+      { resource: "ads_per_day", limit: 240 },
+      { resource: "business_centers", limit: 12 },
+      { resource: "advertiser_accounts", limit: -1 },
+    ],
   },
   {
     id: "plan-enterprise",
@@ -84,17 +102,23 @@ export const plans = [
     stripePriceId: null,
     createdAt: past(180),
     updatedAt: past(180),
+    quotaLimits: [
+      { resource: "campaigns_per_day", limit: -1 },
+      { resource: "ads_per_day", limit: -1 },
+      { resource: "business_centers", limit: -1 },
+      { resource: "advertiser_accounts", limit: -1 },
+    ],
   },
 ];
 
-const growthPlan = plans[1]!;
+const scalePlan = plans[2]!;
 
 // ── Subscription ──────────────────────────────────────────────────────────────
 export const subscription = {
   id: "demo-sub-id",
   organizationId: DEMO_ORG_ID,
-  planId: growthPlan.id,
-  plan: growthPlan,
+  planId: scalePlan.id,
+  plan: scalePlan,
   status: DEMO_SUBSCRIPTION_STATUS,
   stripeCustomerId: null,
   stripeSubscriptionId: null,
@@ -297,6 +321,62 @@ export const campaigns = [
   makeCampaign("camp-6", "Meta — Leads Qualificados", "META", "PAUSED", 35000, 28900, 445000, 9600, 40),
 ];
 
+// ── Campaign templates (Prisma model: campaignTemplate) ───────────────────────
+export const campaignTemplates = [
+  {
+    id: "tpl-1",
+    organizationId: DEMO_ORG_ID,
+    name: "E-commerce — Conversão Básica",
+    platform: "TIKTOK",
+    objective: "CONVERSIONS",
+    description: "Template otimizado para e-commerce com foco em conversão",
+    config: { bidStrategy: "LOWEST_COST", placementType: "AUTOMATIC" },
+    isActive: true,
+    usageCount: 12,
+    createdAt: past(60),
+    updatedAt: past(5),
+  },
+  {
+    id: "tpl-2",
+    organizationId: DEMO_ORG_ID,
+    name: "Lead Gen — B2B",
+    platform: "META",
+    objective: "LEAD_GENERATION",
+    description: "Captação de leads qualificados para B2B",
+    config: { bidStrategy: "COST_CAP", targetCpa: 5000 },
+    isActive: true,
+    usageCount: 7,
+    createdAt: past(45),
+    updatedAt: past(10),
+  },
+  {
+    id: "tpl-3",
+    organizationId: DEMO_ORG_ID,
+    name: "Awareness — Branding",
+    platform: "TIKTOK",
+    objective: "REACH",
+    description: "Maximizar alcance para campanhas de marca",
+    config: { bidStrategy: "CPM", frequency: 3 },
+    isActive: true,
+    usageCount: 23,
+    createdAt: past(30),
+    updatedAt: past(2),
+  },
+  {
+    id: "tpl-4",
+    organizationId: DEMO_ORG_ID,
+    name: "Remarketing — Carrinho Abandonado",
+    platform: "META",
+    objective: "CONVERSIONS",
+    description: "Recuperação de carrinho abandonado",
+    config: { audienceType: "RETARGETING", lookbackWindow: 7 },
+    isActive: true,
+    usageCount: 18,
+    createdAt: past(25),
+    updatedAt: past(3),
+  },
+];
+
 // ── Templates ─────────────────────────────────────────────────────────────────
 export const templates = [
   {
@@ -437,6 +517,99 @@ export const notifications = [
     type: "BUDGET",
     isRead: true,
     createdAt: past(10),
+  },
+];
+
+// ── Advertiser accounts (unified TikTok + Meta) ───────────────────────────────
+export const advertiserAccounts = [
+  { id: "tt-acc-1", name: "Demo Agency — Principal", platform: "TIKTOK", isActive: true, organizationId: DEMO_ORG_ID },
+  { id: "tt-acc-2", name: "Cliente Premium — TikTok", platform: "TIKTOK", isActive: true, organizationId: DEMO_ORG_ID },
+  { id: "meta-acc-1", name: "Demo Agency — Meta Ads", platform: "META", isActive: true, organizationId: DEMO_ORG_ID },
+  { id: "meta-acc-2", name: "Cliente Premium — Meta", platform: "META", isActive: true, organizationId: DEMO_ORG_ID },
+];
+
+// ── ReportDaily rows ──────────────────────────────────────────────────────────
+// findMany shape — used by /reports/summary aggregation
+export const reportDailyRows = Array.from({ length: 30 }, (_, i) => ({
+  date: past(29 - i),
+  platform: i % 2 === 0 ? "TIKTOK" : "META",
+  organizationId: DEMO_ORG_ID,
+  impressions: 60000 + ((i * 3700 + 12341) % 40000),
+  clicks: 1200 + ((i * 1300 + 5671) % 1200),
+  spend: 4000 + ((i * 7100 + 8901) % 4000),
+  conversions: 48 + ((i * 700 + 1231) % 60),
+  revenue: 8000 + ((i * 5300 + 3211) % 8000),
+}));
+
+// groupBy date shape — used by /reports/daily
+export const reportDailyByDate = Array.from({ length: 30 }, (_, i) => ({
+  date: past(29 - i),
+  _sum: {
+    impressions: 60000 + ((i * 3700 + 12341) % 40000),
+    clicks: 1200 + ((i * 1300 + 5671) % 1200),
+    spend: 4000 + ((i * 7100 + 8901) % 4000),
+    conversions: 48 + ((i * 700 + 1231) % 60),
+    revenue: 8000 + ((i * 5300 + 3211) % 8000),
+  },
+}));
+
+// groupBy platform shape — used by /reports/by-platform
+export const reportDailyByPlatform = [
+  {
+    platform: "TIKTOK",
+    _sum: { impressions: 1513000, clicks: 32300, spend: 114600, conversions: 1292, revenue: 228000 },
+  },
+  {
+    platform: "META",
+    _sum: { impressions: 1342000, clicks: 29100, spend: 86500, conversions: 1164, revenue: 173000 },
+  },
+];
+
+// groupBy advertiserAccountId shape — used by /reports/by-account
+export const reportDailyByAccount = [
+  {
+    advertiserAccountId: "tt-acc-1",
+    _sum: { impressions: 820000, clicks: 17500, spend: 62000, conversions: 700, revenue: 124000 },
+  },
+  {
+    advertiserAccountId: "tt-acc-2",
+    _sum: { impressions: 693000, clicks: 14800, spend: 52600, conversions: 592, revenue: 104000 },
+  },
+  {
+    advertiserAccountId: "meta-acc-1",
+    _sum: { impressions: 712000, clicks: 15400, spend: 47800, conversions: 632, revenue: 95000 },
+  },
+  {
+    advertiserAccountId: "meta-acc-2",
+    _sum: { impressions: 630000, clicks: 13700, spend: 38700, conversions: 532, revenue: 78000 },
+  },
+];
+
+// groupBy campaignId shape — used by /reports/by-campaign
+export const reportDailyByCampaign = [
+  {
+    campaignId: "camp-1",
+    _sum: { impressions: 425000, clicks: 8900, spend: 38200, conversions: 356, revenue: 76400 },
+  },
+  {
+    campaignId: "camp-4",
+    _sum: { impressions: 612000, clicks: 12400, spend: 47800, conversions: 496, revenue: 95600 },
+  },
+  {
+    campaignId: "camp-3",
+    _sum: { impressions: 890000, clicks: 18200, spend: 61000, conversions: 728, revenue: 122000 },
+  },
+  {
+    campaignId: "camp-2",
+    _sum: { impressions: 198000, clicks: 5200, spend: 15400, conversions: 208, revenue: 30800 },
+  },
+  {
+    campaignId: "camp-5",
+    _sum: { impressions: 285000, clicks: 7100, spend: 9800, conversions: 284, revenue: 19600 },
+  },
+  {
+    campaignId: "camp-6",
+    _sum: { impressions: 445000, clicks: 9600, spend: 28900, conversions: 384, revenue: 57800 },
   },
 ];
 

@@ -11,6 +11,6 @@ export const DEMO_ORG: OrgContext = {
   role: "ADMIN",
   subscription: {
     status: "ACTIVE",
-    plan: { slug: "GROWTH", name: "Growth" },
+    plan: { slug: "SCALE", name: "Scale" },
   },
 };
