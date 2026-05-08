@@ -36,7 +36,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     let decoded;
     try {
       decoded = await firebaseAuth.verifyIdToken(idToken, true);
-    } catch {
+    } catch (err) {
+      request.log.error({ err }, "verifyIdToken failed");
       return reply.status(401).send({ success: false, error: "Invalid token" });
     }
 
