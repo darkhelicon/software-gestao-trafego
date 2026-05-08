@@ -37,7 +37,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_STANDALONE=1
 # Ensure public/ exists so the COPY in production stage never fails
 RUN mkdir -p /app/apps/web/public
-RUN pnpm --filter @adflow/web build
+RUN pnpm --filter @helzo-scale/web build
 
 # ========================
 # Production

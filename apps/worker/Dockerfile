@@ -23,20 +23,20 @@ RUN pnpm install --frozen-lockfile
 # ========================
 FROM deps AS development
 COPY . .
-RUN pnpm --filter @adflow/database db:generate
-CMD ["pnpm", "--filter", "@adflow/worker", "dev"]
+RUN pnpm --filter @helzo-scale/database db:generate
+CMD ["pnpm", "--filter", "@helzo-scale/worker", "dev"]
 
 # ========================
 # Builder
 # ========================
 FROM deps AS builder
 COPY . .
-RUN pnpm --filter @adflow/database db:generate
-RUN pnpm --filter @adflow/config build
-RUN pnpm --filter @adflow/types build
-RUN pnpm --filter @adflow/integrations build
-RUN pnpm --filter @adflow/database build
-RUN pnpm --filter @adflow/worker build
+RUN pnpm --filter @helzo-scale/database db:generate
+RUN pnpm --filter @helzo-scale/config build
+RUN pnpm --filter @helzo-scale/types build
+RUN pnpm --filter @helzo-scale/integrations build
+RUN pnpm --filter @helzo-scale/database build
+RUN pnpm --filter @helzo-scale/worker build
 
 # ========================
 # Production
@@ -63,7 +63,7 @@ COPY --from=builder /app/packages/types/dist ./packages/types/dist
 COPY --from=builder /app/packages/integrations/dist ./packages/integrations/dist
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 
-RUN pnpm --filter @adflow/database db:generate
+RUN pnpm --filter @helzo-scale/database db:generate
 
 ENV NODE_ENV=production
 
