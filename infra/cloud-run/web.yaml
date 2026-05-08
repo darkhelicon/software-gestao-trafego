@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: adflow-web
+  name: helzo-scale-web
   annotations:
     run.googleapis.com/ingress: all
     run.googleapis.com/launch-stage: GA
@@ -15,11 +15,11 @@ spec:
         run.googleapis.com/cpu-throttling: "true"
         run.googleapis.com/startup-cpu-boost: "true"
     spec:
-      serviceAccountName: adflow-web-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+      serviceAccountName: helzo-scale-web-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
       containerConcurrency: 80
       timeoutSeconds: 30
       containers:
-        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adflow/web:${IMAGE_TAG}
+        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/helzo-scale/web:${IMAGE_TAG}
           ports:
             - containerPort: 3000
           resources:

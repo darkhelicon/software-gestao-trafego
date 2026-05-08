@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: adflow-worker
+  name: helzo-scale-worker
   annotations:
     run.googleapis.com/ingress: internal
     run.googleapis.com/launch-stage: GA
@@ -17,11 +17,11 @@ spec:
         run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
         run.googleapis.com/vpc-access-egress: private-ranges-only
     spec:
-      serviceAccountName: adflow-worker-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+      serviceAccountName: helzo-scale-worker-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
       containerConcurrency: 1
       timeoutSeconds: 900
       containers:
-        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adflow/worker:${IMAGE_TAG}
+        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/helzo-scale/worker:${IMAGE_TAG}
           ports:
             - containerPort: 8080
           resources:
@@ -38,27 +38,27 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-database_url
+                  name: helzo-scale-database_url
                   key: latest
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-redis_url
+                  name: helzo-scale-redis_url
                   key: latest
             - name: ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: adflow-encryption_key
+                  name: helzo-scale-encryption_key
                   key: latest
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-jwt_secret
+                  name: helzo-scale-jwt_secret
                   key: latest
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-jwt_refresh_secret
+                  name: helzo-scale-jwt_refresh_secret
                   key: latest
             - name: JWT_EXPIRES_IN
               value: "15m"
@@ -67,37 +67,37 @@ spec:
             - name: TIKTOK_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-tiktok_app_id
+                  name: helzo-scale-tiktok_app_id
                   key: latest
             - name: TIKTOK_APP_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-tiktok_app_secret
+                  name: helzo-scale-tiktok_app_secret
                   key: latest
             - name: META_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-meta_app_id
+                  name: helzo-scale-meta_app_id
                   key: latest
             - name: META_APP_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-meta_app_secret
+                  name: helzo-scale-meta_app_secret
                   key: latest
             - name: SENTRY_DSN
               valueFrom:
                 secretKeyRef:
-                  name: adflow-sentry_dsn
+                  name: helzo-scale-sentry_dsn
                   key: latest
             - name: GCP_PROJECT_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-gcp_project_id
+                  name: helzo-scale-gcp_project_id
                   key: latest
             - name: GCP_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
-                  name: adflow-gcp_bucket_name
+                  name: helzo-scale-gcp_bucket_name
                   key: latest
           startupProbe:
             httpGet:

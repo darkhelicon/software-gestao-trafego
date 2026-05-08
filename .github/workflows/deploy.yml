@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/adflow
+  REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/helzo-scale
 
 jobs:
   deploy:
@@ -166,7 +166,7 @@ jobs:
       # Allow unauthenticated access (public SaaS — both API and Web need to be reachable)
       - name: Allow public access to API and Web
         run: |
-          for service in adflow-api adflow-web; do
+          for service in helzo-scale-api helzo-scale-web; do
             gcloud run services add-iam-policy-binding "$service" \
               --region=${{ secrets.GCP_REGION }} \
               --member="allUsers" \

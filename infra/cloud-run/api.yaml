@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: adflow-api
+  name: helzo-scale-api
   annotations:
     run.googleapis.com/ingress: all
     run.googleapis.com/launch-stage: GA
@@ -18,11 +18,11 @@ spec:
         run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
         run.googleapis.com/vpc-access-egress: private-ranges-only
     spec:
-      serviceAccountName: adflow-api-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+      serviceAccountName: helzo-scale-api-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
       containerConcurrency: 100
       timeoutSeconds: 60
       containers:
-        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/adflow/api:${IMAGE_TAG}
+        - image: ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/helzo-scale/api:${IMAGE_TAG}
           ports:
             - containerPort: 3001
           resources:
@@ -39,42 +39,42 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-database_url
+                  name: helzo-scale-database_url
                   key: latest
             - name: REDIS_URL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-redis_url
+                  name: helzo-scale-redis_url
                   key: latest
             - name: FIREBASE_PROJECT_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-firebase_project_id
+                  name: helzo-scale-firebase_project_id
                   key: latest
             - name: FIREBASE_CLIENT_EMAIL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-firebase_client_email
+                  name: helzo-scale-firebase_client_email
                   key: latest
             - name: FIREBASE_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: adflow-firebase_private_key
+                  name: helzo-scale-firebase_private_key
                   key: latest
             - name: ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
-                  name: adflow-encryption_key
+                  name: helzo-scale-encryption_key
                   key: latest
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-jwt_secret
+                  name: helzo-scale-jwt_secret
                   key: latest
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-jwt_refresh_secret
+                  name: helzo-scale-jwt_refresh_secret
                   key: latest
             - name: JWT_EXPIRES_IN
               value: "15m"
@@ -83,87 +83,87 @@ spec:
             - name: STRIPE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_secret_key
+                  name: helzo-scale-stripe_secret_key
                   key: latest
             - name: STRIPE_WEBHOOK_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_webhook_secret
+                  name: helzo-scale-stripe_webhook_secret
                   key: latest
             - name: STRIPE_PRICE_START
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_price_start
+                  name: helzo-scale-stripe_price_start
                   key: latest
             - name: STRIPE_PRICE_GROWTH
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_price_growth
+                  name: helzo-scale-stripe_price_growth
                   key: latest
             - name: STRIPE_PRICE_SCALE
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_price_scale
+                  name: helzo-scale-stripe_price_scale
                   key: latest
             - name: STRIPE_PRICE_ENTERPRISE
               valueFrom:
                 secretKeyRef:
-                  name: adflow-stripe_price_enterprise
+                  name: helzo-scale-stripe_price_enterprise
                   key: latest
             - name: TIKTOK_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-tiktok_app_id
+                  name: helzo-scale-tiktok_app_id
                   key: latest
             - name: TIKTOK_APP_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-tiktok_app_secret
+                  name: helzo-scale-tiktok_app_secret
                   key: latest
             - name: TIKTOK_REDIRECT_URI
               valueFrom:
                 secretKeyRef:
-                  name: adflow-tiktok_redirect_uri
+                  name: helzo-scale-tiktok_redirect_uri
                   key: latest
             - name: META_APP_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-meta_app_id
+                  name: helzo-scale-meta_app_id
                   key: latest
             - name: META_APP_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: adflow-meta_app_secret
+                  name: helzo-scale-meta_app_secret
                   key: latest
             - name: META_REDIRECT_URI
               valueFrom:
                 secretKeyRef:
-                  name: adflow-meta_redirect_uri
+                  name: helzo-scale-meta_redirect_uri
                   key: latest
             - name: GCP_PROJECT_ID
               valueFrom:
                 secretKeyRef:
-                  name: adflow-gcp_project_id
+                  name: helzo-scale-gcp_project_id
                   key: latest
             - name: GCP_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
-                  name: adflow-gcp_bucket_name
+                  name: helzo-scale-gcp_bucket_name
                   key: latest
             - name: SENTRY_DSN
               valueFrom:
                 secretKeyRef:
-                  name: adflow-sentry_dsn
+                  name: helzo-scale-sentry_dsn
                   key: latest
             - name: ALLOWED_ORIGINS
               valueFrom:
                 secretKeyRef:
-                  name: adflow-allowed_origins
+                  name: helzo-scale-allowed_origins
                   key: latest
             - name: FRONTEND_URL
               valueFrom:
                 secretKeyRef:
-                  name: adflow-frontend_url
+                  name: helzo-scale-frontend_url
                   key: latest
           startupProbe:
             httpGet:
