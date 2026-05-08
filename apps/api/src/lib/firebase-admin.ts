@@ -11,8 +11,9 @@ if (!admin.apps.length) {
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
     });
   } else {
-    // Credentials not configured — Firebase auth will be unavailable
-    admin.initializeApp();
+    // Use ADC — on Cloud Run the service account is used automatically.
+    // projectId must be passed explicitly so token verification knows which project.
+    admin.initializeApp(projectId ? { projectId } : undefined);
   }
 }
 
