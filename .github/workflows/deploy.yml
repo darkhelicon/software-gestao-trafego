@@ -119,6 +119,7 @@ jobs:
 
           cd packages/database
           pnpm exec prisma migrate deploy
+          pnpm exec prisma generate
           # Seed is idempotent (upsert) — safe to run on every deploy
           pnpm exec tsx src/seed.ts
 
