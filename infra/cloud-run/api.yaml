@@ -15,6 +15,8 @@ spec:
         run.googleapis.com/cpu-throttling: "false"
         run.googleapis.com/startup-cpu-boost: "true"
         run.googleapis.com/cloudsql-instances: "${GCP_PROJECT_ID}:${GCP_REGION}:adflow-postgres"
+        run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
+        run.googleapis.com/vpc-access-egress: private-ranges-only
     spec:
       serviceAccountName: adflow-api-sa@${GCP_PROJECT_ID}.iam.gserviceaccount.com
       containerConcurrency: 100
