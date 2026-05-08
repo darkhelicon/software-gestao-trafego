@@ -6,6 +6,7 @@ const plans: Array<{
   name: string;
   description: string;
   priceMonthly: number;
+  stripePriceId: string;
   features: string[];
   quotas: Record<string, number>;
 }> = [
@@ -14,6 +15,7 @@ const plans: Array<{
     name: "Start",
     description: "Entrada para quem está começando a operar campanhas.",
     priceMonthly: 197,
+    stripePriceId: "price_1TUfrF83NyrrcWaOaKvYwDFu",
     features: ["dashboard_basic", "mass_appeal"],
     quotas: {
       campaigns_per_day: 20,
@@ -27,6 +29,7 @@ const plans: Array<{
     name: "Growth",
     description: "Para quem já possui operação com maior volume.",
     priceMonthly: 497,
+    stripePriceId: "price_1TUfre83NyrrcWaOb94oUgdf",
     features: [
       "dashboard_basic",
       "mass_appeal",
@@ -46,6 +49,7 @@ const plans: Array<{
     name: "Scale",
     description: "Para operações de alta performance.",
     priceMonthly: 697,
+    stripePriceId: "price_1TUfru83NyrrcWaOZiEkMLFW",
     features: [
       "dashboard_basic",
       "mass_appeal",
@@ -68,6 +72,7 @@ const plans: Array<{
     name: "Enterprise",
     description: "Para agências e operações grandes.",
     priceMonthly: 1397,
+    stripePriceId: "price_1TUfsD83NyrrcWaO9giDMTJr",
     features: [
       "dashboard_basic",
       "mass_appeal",
@@ -102,6 +107,7 @@ async function seed() {
         name: plan.name,
         description: plan.description,
         priceMonthly: plan.priceMonthly,
+        stripePriceId: plan.stripePriceId,
         features: {
           create: plan.features.map((f) => ({ feature: f, enabled: true })),
         },
@@ -116,6 +122,7 @@ async function seed() {
         name: plan.name,
         description: plan.description,
         priceMonthly: plan.priceMonthly,
+        stripePriceId: plan.stripePriceId,
       },
     });
     console.log(`  Upserted plan: ${created.slug}`);
