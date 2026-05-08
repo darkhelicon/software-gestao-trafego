@@ -1,5 +1,4 @@
 import fp from "fastify-plugin";
-import { prisma } from "@adflow/database";
 import type { PrismaClient } from "@adflow/database";
 import { isDemoMode } from "../lib/demo-mode.js";
 import { mockPrismaClient } from "../mocks/prisma.mock.js";
@@ -15,6 +14,10 @@ export const prismaPlugin = fp(async (app) => {
     app.decorate("prisma", mockPrismaClient);
     return;
   }
+
+  // Dynamic import so PrismaClient is never instantiated in demo mode
+  // (Prisma v6 validates DATABASE_URL in the constructor, not just on connect)
+  const { prisma } = await import("@adflow/database");
 
   await prisma.$connect();
 

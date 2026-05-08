@@ -10,6 +10,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:demo": "turbo run build --filter=@adflow/config --filter=@adflow/types --filter=@adflow/integrations --filter=@adflow/database && turbo run dev --filter=@adflow/api --filter=@adflow/web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:generate": "pnpm --filter @adflow/database db:generate",

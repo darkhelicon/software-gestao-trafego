@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { Queue } from "bullmq";
+import { isDemoMode } from "../lib/demo-mode.js";
 
 const VERSION = process.env["npm_package_version"] ?? "0.0.0";
 const STARTED_AT = Date.now();
@@ -23,7 +24,7 @@ export const healthRoute: FastifyPluginAsync = async (app) => {
 
     // Queue stats — best-effort, don't fail health check if unavailable
     let queues: Record<string, { waiting: number; active: number; failed: number }> = {};
-    if (redisOk) {
+    if (redisOk && !isDemoMode()) {
       const results = await Promise.allSettled(
         QUEUE_NAMES.map(async (name) => {
           const q = new Queue(name, { connection: app.redis });
