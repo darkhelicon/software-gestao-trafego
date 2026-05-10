@@ -52,7 +52,7 @@ export const tiktokOAuthRoutes: FastifyPluginAsync = async (app) => {
 
     if (error || !code || !state) {
       return reply.redirect(
-        `${process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3000"}/tiktok?error=oauth_denied`
+        `${process.env["FRONTEND_URL"] ?? "http://localhost:3000"}/tiktok?error=oauth_denied`
       );
     }
 

@@ -17,6 +17,10 @@ export const stripeWebhookRoute: FastifyPluginAsync = async (app) => {
         return reply.status(400).send({ success: false, error: "Missing stripe-signature" });
       }
 
+      if (!stripe) {
+        return reply.status(503).send({ success: false, error: "Payments not configured" });
+      }
+
       let event: Stripe.Event;
       try {
         const raw = (request as unknown as { rawBody: Buffer }).rawBody;
