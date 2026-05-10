@@ -25,10 +25,10 @@ interface MembersTableProps {
 }
 
 const ROLE_COLORS: Record<Role, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  MANAGER: "bg-blue-100 text-blue-700",
-  OPERATOR: "bg-green-100 text-green-700",
-  VIEWER: "bg-gray-100 text-gray-600",
+  ADMIN: "bg-purple-400/10 text-purple-400",
+  MANAGER: "bg-blue-400/10 text-blue-400",
+  OPERATOR: "bg-green-400/10 text-green-400",
+  VIEWER: "bg-white/5 text-gray-500",
 };
 
 export function MembersTable({ members }: MembersTableProps) {
@@ -60,10 +60,10 @@ export function MembersTable({ members }: MembersTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-white/[0.02] border-b border-white/5">
             <th className="text-left px-4 py-3 font-medium text-gray-600">Membro</th>
             <th className="text-left px-4 py-3 font-medium text-gray-600">Perfil</th>
             <th className="text-left px-4 py-3 font-medium text-gray-600">Entrou em</th>
@@ -72,24 +72,22 @@ export function MembersTable({ members }: MembersTableProps) {
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-white/5">
           {members.map((m) => {
             const isSelf = m.user.id === currentOrg?.id;
             const isUpdating = updatingId === m.user.id;
             const isRemoving = removingId === m.user.id;
 
             return (
-              <tr key={m.id} className="bg-white hover:bg-gray-50 transition-colors">
+              <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs uppercase shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-brand-400/20 flex items-center justify-center text-brand-400 font-semibold text-xs uppercase shrink-0">
                       {m.user.name?.charAt(0) ?? m.user.email.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {m.user.name ?? "—"}
-                      </p>
-                      <p className="text-gray-500 text-xs">{m.user.email}</p>
+                      <p className="font-medium text-white">{m.user.name ?? "—"}</p>
+                      <p className="text-gray-600 text-xs">{m.user.email}</p>
                     </div>
                   </div>
                 </td>
@@ -99,38 +97,25 @@ export function MembersTable({ members }: MembersTableProps) {
                     <select
                       value={m.role}
                       disabled={isUpdating}
-                      onChange={(e) =>
-                        handleRoleChange(m.user.id, e.target.value as Role)
-                      }
+                      onChange={(e) => handleRoleChange(m.user.id, e.target.value as Role)}
                       className={clsx(
-                        "rounded-full px-2.5 py-1 text-xs font-medium border-0 outline-none cursor-pointer",
+                        "rounded-full px-2.5 py-1 text-xs font-medium border-0 outline-none cursor-pointer bg-transparent",
                         ROLE_COLORS[m.role]
                       )}
                     >
-                      {(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"] as Role[]).map(
-                        (r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        )
-                      )}
+                      {(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"] as Role[]).map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
                     </select>
                   ) : (
-                    <span
-                      className={clsx(
-                        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
-                        ROLE_COLORS[m.role]
-                      )}
-                    >
+                    <span className={clsx("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium", ROLE_COLORS[m.role])}>
                       {m.role}
                     </span>
                   )}
                 </td>
 
                 <td className="px-4 py-3 text-gray-500">
-                  {m.joinedAt
-                    ? new Date(m.joinedAt).toLocaleDateString("pt-BR")
-                    : "Pendente"}
+                  {m.joinedAt ? new Date(m.joinedAt).toLocaleDateString("pt-BR") : "Pendente"}
                 </td>
 
                 {canManage && (
@@ -141,7 +126,7 @@ export function MembersTable({ members }: MembersTableProps) {
                         size="sm"
                         isLoading={isRemoving}
                         onClick={() => handleRemove(m.user.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
                       >
                         Remover
                       </Button>

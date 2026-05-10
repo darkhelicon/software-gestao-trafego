@@ -8,9 +8,9 @@ export function Card({ className, highlight, children, ...props }: CardProps) {
   return (
     <div
       className={clsx(
-        "rounded-xl border bg-white p-6 shadow-sm",
+        "rounded-xl border bg-white/[0.03] p-6",
         highlight && "border-brand-400 ring-2 ring-brand-400/20",
-        !highlight && "border-gray-200",
+        !highlight && "border-white/10",
         className
       )}
       {...props}
@@ -30,7 +30,7 @@ export function CardHeader({ className, children, ...props }: React.HTMLAttribut
 
 export function CardTitle({ className, children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={clsx("text-lg font-semibold text-gray-900", className)} {...props}>
+    <h3 className={clsx("text-lg font-semibold text-white", className)} {...props}>
       {children}
     </h3>
   );
@@ -38,7 +38,7 @@ export function CardTitle({ className, children, ...props }: React.HTMLAttribute
 
 export function CardContent({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={clsx("text-sm text-gray-600", className)} {...props}>
+    <div className={clsx("text-sm text-gray-400", className)} {...props}>
       {children}
     </div>
   );

@@ -21,56 +21,34 @@ export default function MetaBulkPage() {
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
       <div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <Link href="/meta" className="hover:text-gray-800">
-            Meta Ads
-          </Link>
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+          <Link href="/meta" className="hover:text-white transition-colors">Meta Ads</Link>
           <span>/</span>
-          <Link href="/meta/campaigns" className="hover:text-gray-800">
-            Campanhas
-          </Link>
+          <Link href="/meta/campaigns" className="hover:text-white transition-colors">Campanhas</Link>
           <span>/</span>
-          <span>Criação em massa</span>
+          <span className="text-gray-400">Criação em massa</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Criação em massa — Meta
-        </h1>
+        <h1 className="text-2xl font-bold text-white">Criação em massa — Meta</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Crie até 50 campanhas de uma vez. Cada campanha será processada de
-          forma assíncrona com retry automático.
+          Crie até 50 campanhas de uma vez. Cada campanha será processada de forma assíncrona com retry automático.
         </p>
       </div>
 
       {jobId && (
-        <div
-          className={`rounded-xl border p-6 ${
-            done
-              ? "border-green-200 bg-green-50"
-              : "border-blue-200 bg-blue-50"
-          }`}
-        >
-          <h2
-            className={`text-sm font-semibold mb-4 ${
-              done ? "text-green-800" : "text-blue-800"
-            }`}
-          >
+        <div className={`rounded-xl border p-6 ${done ? "border-green-400/20 bg-green-400/5" : "border-brand-400/20 bg-brand-400/5"}`}>
+          <h2 className={`text-sm font-semibold mb-4 ${done ? "text-green-400" : "text-brand-400"}`}>
             {done ? "Processamento concluído" : "Criando campanhas..."}
           </h2>
           <JobStatus jobId={jobId} platform="meta" onDone={handleJobDone} />
           {done && (
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex gap-3">
               <Link href="/meta/campaigns">
-                <button className="text-sm text-blue-600 hover:underline">
-                  Ver campanhas
-                </button>
+                <button className="text-sm text-brand-400 hover:text-brand-500 transition-colors">Ver campanhas</button>
               </Link>
-              <span className="text-gray-300">·</span>
+              <span className="text-white/20">·</span>
               <button
-                onClick={() => {
-                  setJobId(null);
-                  setDone(false);
-                }}
-                className="text-sm text-gray-500 hover:underline"
+                onClick={() => { setJobId(null); setDone(false); }}
+                className="text-sm text-gray-500 hover:text-white transition-colors"
               >
                 Criar mais
               </button>
@@ -80,7 +58,7 @@ export default function MetaBulkPage() {
       )}
 
       {!jobId && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
           <BulkCreateForm platform="META" onJobCreated={handleJobCreated} />
         </div>
       )}

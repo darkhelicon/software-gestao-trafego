@@ -35,6 +35,7 @@ export default function DashboardPage() {
   const [preset, setPreset] = useState<Preset>("30d");
   const [platform, setPlatform] = useState<"ALL" | "TIKTOK" | "META">("ALL");
   const [campaignPage, setCampaignPage] = useState(1);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   const range = {
     ...presetToRange(preset),
@@ -51,7 +52,8 @@ export default function DashboardPage() {
   function handleSync() {
     sync.mutate(undefined, {
       onSuccess: (res) => {
-        alert(`Sincronização iniciada para ${res.enqueued} conta(s). Os dados serão atualizados em instantes.`);
+        setSyncMsg(`Sincronização iniciada para ${res.enqueued} conta(s).`);
+        setTimeout(() => setSyncMsg(null), 4000);
       },
     });
   }
@@ -61,10 +63,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Visão consolidada de todas as campanhas
-          </p>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Visão consolidada de todas as campanhas</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <DateRangePicker
@@ -84,12 +84,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {syncMsg && (
+        <div className="rounded-lg border border-brand-400/20 bg-brand-400/10 px-4 py-2.5 text-sm text-brand-400">
+          {syncMsg}
+        </div>
+      )}
+
       {/* KPI Cards */}
       <section>
         {summaryLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-gray-200 bg-white p-5 h-24 animate-pulse" />
+              <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-5 h-24 animate-pulse" />
             ))}
           </div>
         ) : summary ? (
@@ -111,7 +117,6 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* Secondary KPI row */}
       {summary && (
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard label="CTR" value={formatPct(summary.ctr)} />
@@ -123,25 +128,21 @@ export default function DashboardPage() {
 
       {/* Spend chart + Platform breakdown */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
-            Gasto diário
-          </h2>
+        <div className="xl:col-span-2 rounded-xl border border-white/10 bg-white/[0.03] p-6">
+          <h2 className="text-base font-semibold text-white mb-4">Gasto diário</h2>
           {dailyLoading ? (
-            <div className="h-48 animate-pulse bg-gray-50 rounded-lg" />
+            <div className="h-48 animate-pulse bg-white/5 rounded-lg" />
           ) : (
             <SpendChart rows={daily ?? []} />
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
-            Por plataforma
-          </h2>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+          <h2 className="text-base font-semibold text-white mb-4">Por plataforma</h2>
           {platformLoading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
-                <div key={i} className="h-16 animate-pulse bg-gray-50 rounded-lg" />
+                <div key={i} className="h-16 animate-pulse bg-white/5 rounded-lg" />
               ))}
             </div>
           ) : (
@@ -151,19 +152,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Top campaigns table */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">
-            Top campanhas por gasto
-          </h2>
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5">
+          <h2 className="text-base font-semibold text-white">Top campanhas por gasto</h2>
         </div>
         {campaignLoading ? (
-          <div className="p-6">
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-10 animate-pulse bg-gray-50 rounded" />
-              ))}
-            </div>
+          <div className="p-6 space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 animate-pulse bg-white/5 rounded" />
+            ))}
           </div>
         ) : (
           <TopCampaigns

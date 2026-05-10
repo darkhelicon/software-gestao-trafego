@@ -21,7 +21,7 @@ function formatDate(iso: string) {
 export function SpendChart({ rows }: SpendChartProps) {
   if (!rows.length) {
     return (
-      <div className="flex items-center justify-center h-48 text-sm text-gray-400">
+      <div className="flex items-center justify-center h-48 text-sm text-gray-600">
         Sem dados para o período selecionado
       </div>
     );
@@ -46,13 +46,11 @@ export function SpendChart({ rows }: SpendChartProps) {
     `${points[points.length - 1]!.x},${PADDING.top + chartH}`,
   ].join(" ");
 
-  // Y-axis tick labels (0 and max)
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({
     y: PADDING.top + chartH - f * chartH,
     label: formatCurrency(f * maxSpend),
   }));
 
-  // X-axis: show at most 7 labels
   const xInterval = Math.ceil(rows.length / 7);
   const xLabels = points.filter((_, i) => i % xInterval === 0 || i === rows.length - 1);
 
@@ -62,7 +60,6 @@ export function SpendChart({ rows }: SpendChartProps) {
       className="w-full"
       preserveAspectRatio="xMidYMid meet"
     >
-      {/* Grid lines */}
       {yTicks.map((t) => (
         <line
           key={t.y}
@@ -70,12 +67,11 @@ export function SpendChart({ rows }: SpendChartProps) {
           y1={t.y}
           x2={WIDTH - PADDING.right}
           y2={t.y}
-          stroke="#f0f0f0"
+          stroke="#ffffff08"
           strokeWidth={1}
         />
       ))}
 
-      {/* Y-axis labels */}
       {yTicks.map((t) => (
         <text
           key={t.y}
@@ -83,13 +79,12 @@ export function SpendChart({ rows }: SpendChartProps) {
           y={t.y + 4}
           textAnchor="end"
           fontSize={10}
-          fill="#9ca3af"
+          fill="#6b7280"
         >
           {t.label}
         </text>
       ))}
 
-      {/* X-axis labels */}
       {xLabels.map((p) => (
         <text
           key={p.row.date}
@@ -97,34 +92,31 @@ export function SpendChart({ rows }: SpendChartProps) {
           y={HEIGHT - 6}
           textAnchor="middle"
           fontSize={10}
-          fill="#9ca3af"
+          fill="#6b7280"
         >
           {formatDate(p.row.date)}
         </text>
       ))}
 
-      {/* Area fill */}
       <defs>
         <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+          <stop offset="0%" stopColor="#facc15" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={area} fill="url(#spendGrad)" />
 
-      {/* Line */}
       <polyline
         points={polyline}
         fill="none"
-        stroke="#6366f1"
+        stroke="#facc15"
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
 
-      {/* Dots */}
       {points.map((p) => (
-        <circle key={p.row.date} cx={p.x} cy={p.y} r={3} fill="#6366f1" />
+        <circle key={p.row.date} cx={p.x} cy={p.y} r={3} fill="#facc15" />
       ))}
     </svg>
   );

@@ -21,6 +21,8 @@ const ACTIONS = [
   { value: "SEND_ALERT",        label: "Enviar alerta",         hasValue: false },
 ];
 
+const fieldClass = "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-400/20 focus:border-brand-400 transition-colors";
+
 interface RuleFormProps {
   initial?: AutomationRule | undefined;
   onSubmit: (data: object) => void;
@@ -55,49 +57,38 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nome da regra</label>
+        <label className="block text-sm font-medium text-gray-300 mb-1">Nome da regra</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className={fieldClass}
           placeholder="Ex: Pausar campanhas com CPA alto"
         />
       </div>
 
-      {/* Platform filter */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Plataforma (opcional)</label>
-        <select
-          value={platform}
-          onChange={(e) => setPlatform(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-        >
+        <label className="block text-sm font-medium text-gray-300 mb-1">Plataforma (opcional)</label>
+        <select value={platform} onChange={(e) => setPlatform(e.target.value)} className={fieldClass}>
           <option value="">Todas as plataformas</option>
           <option value="TIKTOK">TikTok Ads</option>
           <option value="META">Meta Ads</option>
         </select>
       </div>
 
-      {/* Condition */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Condição</label>
-          <select
-            value={condition}
-            onChange={(e) => setCondition(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-          >
+          <label className="block text-sm font-medium text-gray-300 mb-1">Condição</label>
+          <select value={condition} onChange={(e) => setCondition(e.target.value)} className={fieldClass}>
             {CONDITIONS.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Valor ({selectedCondition?.unit ?? ""})
           </label>
           <input
@@ -107,20 +98,15 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
             value={conditionValue}
             onChange={(e) => setConditionValue(e.target.value)}
             required
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className={fieldClass}
           />
         </div>
       </div>
 
-      {/* Action */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ação</label>
-          <select
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-          >
+          <label className="block text-sm font-medium text-gray-300 mb-1">Ação</label>
+          <select value={action} onChange={(e) => setAction(e.target.value)} className={fieldClass}>
             {ACTIONS.map((a) => (
               <option key={a.value} value={a.value}>{a.label}</option>
             ))}
@@ -128,7 +114,7 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
         </div>
         {selectedAction?.hasValue && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-300 mb-1">
               Valor ({selectedAction.unit})
             </label>
             <input
@@ -139,20 +125,15 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
               value={actionValue}
               onChange={(e) => setActionValue(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className={fieldClass}
             />
           </div>
         )}
       </div>
 
-      {/* Check interval */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Intervalo de verificação</label>
-        <select
-          value={checkInterval}
-          onChange={(e) => setCheckInterval(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-        >
+        <label className="block text-sm font-medium text-gray-300 mb-1">Intervalo de verificação</label>
+        <select value={checkInterval} onChange={(e) => setCheckInterval(e.target.value)} className={fieldClass}>
           <option value="15">A cada 15 minutos</option>
           <option value="30">A cada 30 minutos</option>
           <option value="60">A cada 1 hora</option>
@@ -164,7 +145,7 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-800">
+        <button type="button" onClick={onCancel} className="text-sm text-gray-600 hover:text-white transition-colors">
           Cancelar
         </button>
         <Button type="submit" size="sm" disabled={loading}>

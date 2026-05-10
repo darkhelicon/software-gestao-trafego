@@ -24,15 +24,15 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   return (
     <div className="flex items-center gap-3 flex-wrap">
-      <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="flex rounded-lg border border-white/10 bg-white/[0.03] overflow-hidden">
         {PRESETS.map((p) => (
           <button
             key={p.value}
             onClick={() => onPresetChange(p.value)}
             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
               preset === p.value
-                ? "bg-gray-900 text-white"
-                : "text-gray-600 hover:bg-gray-50"
+                ? "bg-brand-400 text-black"
+                : "text-gray-500 hover:text-white hover:bg-white/5"
             }`}
           >
             {p.label}
@@ -44,7 +44,7 @@ export function DateRangePicker({
         <select
           value={platform}
           onChange={(e) => onPlatformChange(e.target.value as "ALL" | "TIKTOK" | "META")}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-400/30 focus:border-brand-400"
         >
           <option value="ALL">Todas as plataformas</option>
           <option value="TIKTOK">TikTok Ads</option>

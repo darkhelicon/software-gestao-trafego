@@ -38,9 +38,7 @@ export function MetaConnectionsList({ connections }: ConnectionsListProps) {
 
   function daysUntilExpiry(expiresAt: string | null): string {
     if (!expiresAt) return "—";
-    const days = Math.ceil(
-      (new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
+    const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     if (days <= 0) return "Expirado";
     if (days <= 7) return `${days}d (renovar logo)`;
     return `${days}d`;
@@ -51,15 +49,14 @@ export function MetaConnectionsList({ connections }: ConnectionsListProps) {
       {connections.map((conn) => (
         <div
           key={conn.id}
-          className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+          className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 hover:border-white/20 transition-colors"
         >
           <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-gray-900 text-sm">
+            <span className="font-medium text-white text-sm">
               {conn.businessManagerName ?? conn.businessManagerId}
             </span>
-            <span className="text-xs text-gray-400">
-              ID: {conn.businessManagerId} · Token expira em:{" "}
-              {daysUntilExpiry(conn.tokenExpiresAt)}
+            <span className="text-xs text-gray-600">
+              ID: {conn.businessManagerId} · Token expira em: {daysUntilExpiry(conn.tokenExpiresAt)}
             </span>
           </div>
 
@@ -76,7 +73,7 @@ export function MetaConnectionsList({ connections }: ConnectionsListProps) {
               variant="ghost"
               size="sm"
               onClick={() => handleDisconnect(conn.id)}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
             >
               Desconectar
             </Button>

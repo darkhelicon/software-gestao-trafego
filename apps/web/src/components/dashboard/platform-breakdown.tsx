@@ -9,9 +9,9 @@ const PLATFORM_LABELS: Record<string, string> = {
   META: "Meta Ads",
 };
 
-const PLATFORM_COLORS: Record<string, string> = {
-  TIKTOK: "bg-black",
-  META: "bg-blue-600",
+const PLATFORM_COLORS: Record<string, { bar: string; dot: string }> = {
+  TIKTOK: { bar: "bg-brand-400", dot: "bg-brand-400" },
+  META: { bar: "bg-blue-500", dot: "bg-blue-500" },
 };
 
 function fmt(n: number, decimals = 2) {
@@ -21,7 +21,7 @@ function fmt(n: number, decimals = 2) {
 export function PlatformBreakdown({ rows }: PlatformBreakdownProps) {
   if (!rows.length) {
     return (
-      <div className="text-sm text-gray-400 py-6 text-center">
+      <div className="text-sm text-gray-600 py-6 text-center">
         Sem dados de plataforma
       </div>
     );
@@ -30,50 +30,46 @@ export function PlatformBreakdown({ rows }: PlatformBreakdownProps) {
   const totalSpend = rows.reduce((s, r) => s + r.spend, 0);
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-white/5">
       {rows.map((row) => {
         const pct = totalSpend > 0 ? (row.spend / totalSpend) * 100 : 0;
+        const colors = PLATFORM_COLORS[row.platform] ?? { bar: "bg-gray-600", dot: "bg-gray-600" };
         return (
           <div key={row.platform} className="py-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span
-                  className={`inline-block w-2.5 h-2.5 rounded-full ${
-                    PLATFORM_COLORS[row.platform] ?? "bg-gray-400"
-                  }`}
-                />
-                <span className="text-sm font-medium text-gray-800">
+                <span className={`inline-block w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+                <span className="text-sm font-medium text-white">
                   {PLATFORM_LABELS[row.platform] ?? row.platform}
                 </span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-white">
                 R$ {fmt(row.spend)}
               </span>
             </div>
 
-            {/* spend bar */}
-            <div className="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+            <div className="w-full bg-white/5 rounded-full h-1.5 mb-3">
               <div
-                className={`${PLATFORM_COLORS[row.platform] ?? "bg-gray-400"} h-1.5 rounded-full transition-all`}
+                className={`${colors.bar} h-1.5 rounded-full transition-all`}
                 style={{ width: `${pct.toFixed(1)}%` }}
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-2 text-xs text-gray-500">
+            <div className="grid grid-cols-4 gap-2 text-xs text-gray-600">
               <div>
-                <p className="font-medium text-gray-700">{row.impressions.toLocaleString("pt-BR")}</p>
+                <p className="font-medium text-gray-400">{row.impressions.toLocaleString("pt-BR")}</p>
                 <p>Impressões</p>
               </div>
               <div>
-                <p className="font-medium text-gray-700">{fmt(row.ctr, 2)}%</p>
+                <p className="font-medium text-gray-400">{fmt(row.ctr, 2)}%</p>
                 <p>CTR</p>
               </div>
               <div>
-                <p className="font-medium text-gray-700">{row.conversions.toLocaleString("pt-BR")}</p>
+                <p className="font-medium text-gray-400">{row.conversions.toLocaleString("pt-BR")}</p>
                 <p>Conversões</p>
               </div>
               <div>
-                <p className="font-medium text-gray-700">{fmt(row.roas, 2)}x</p>
+                <p className="font-medium text-gray-400">{fmt(row.roas, 2)}x</p>
                 <p>ROAS</p>
               </div>
             </div>

@@ -22,23 +22,23 @@ function NotificationItem({ notification, onRead }: { notification: Notification
 
   return (
     <div
-      className={`flex items-start gap-4 px-6 py-4 border-b border-gray-50 last:border-0 transition-colors ${
-        isUnread ? "bg-blue-50/40" : "hover:bg-gray-50"
+      className={`flex items-start gap-4 px-6 py-4 border-b border-white/5 last:border-0 transition-colors ${
+        isUnread ? "bg-brand-400/5" : "hover:bg-white/[0.02]"
       }`}
     >
-      <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${isUnread ? "bg-blue-500" : "bg-gray-200"}`} />
+      <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${isUnread ? "bg-brand-400" : "bg-white/10"}`} />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-          <p className={`text-sm font-medium ${isUnread ? "text-gray-900" : "text-gray-700"}`}>
+          <p className={`text-sm font-medium ${isUnread ? "text-white" : "text-gray-400"}`}>
             {notification.title}
           </p>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-600">
             {CHANNEL_LABELS[notification.channel] ?? notification.channel}
           </span>
         </div>
-        <p className="text-sm text-gray-600">{notification.body}</p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-sm text-gray-500">{notification.body}</p>
+        <p className="text-xs text-gray-600 mt-1">
           {new Date(notification.createdAt).toLocaleString("pt-BR")}
         </p>
       </div>
@@ -46,7 +46,7 @@ function NotificationItem({ notification, onRead }: { notification: Notification
       {isUnread && (
         <button
           onClick={() => onRead(notification.id)}
-          className="text-xs text-blue-600 hover:text-blue-800 shrink-0 mt-1"
+          className="text-xs text-brand-400 hover:text-brand-500 transition-colors shrink-0 mt-1"
         >
           Marcar lida
         </button>
@@ -68,10 +68,9 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notificações</h1>
+          <h1 className="text-2xl font-bold text-white">Notificações</h1>
           <p className="text-sm text-gray-500 mt-1">Alertas e eventos das suas automações</p>
         </div>
         <div className="flex items-center gap-3">
@@ -79,8 +78,8 @@ export default function NotificationsPage() {
             onClick={() => { setUnreadOnly(!unreadOnly); setPage(1); }}
             className={`text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${
               unreadOnly
-                ? "bg-gray-900 text-white border-gray-900"
-                : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                ? "bg-brand-400 text-black border-brand-400"
+                : "border-white/10 text-gray-500 hover:text-white hover:bg-white/5"
             }`}
           >
             {unreadOnly ? "Todas" : "Não lidas"}
@@ -96,14 +95,13 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* List */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
         {isLoading ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-400">Carregando...</div>
+          <div className="px-6 py-10 text-center text-sm text-gray-600">Carregando...</div>
         ) : !items.length ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm text-gray-500 font-medium">Nenhuma notificação</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               {unreadOnly
                 ? "Você não tem notificações não lidas."
                 : "As notificações das suas automações aparecerão aqui."}
@@ -120,22 +118,21 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-400">Página {page} de {totalPages}</p>
+          <p className="text-xs text-gray-600">Página {page} de {totalPages}</p>
           <div className="flex gap-2">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1.5 text-sm border border-white/10 rounded-lg text-gray-500 disabled:opacity-40 hover:bg-white/5 hover:text-white transition-colors"
             >
               Anterior
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1.5 text-sm border border-white/10 rounded-lg text-gray-500 disabled:opacity-40 hover:bg-white/5 hover:text-white transition-colors"
             >
               Próxima
             </button>

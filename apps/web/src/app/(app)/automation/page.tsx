@@ -36,17 +36,10 @@ export default function AutomationPage() {
     if (editingRule) {
       updateRule.mutate(
         { id: editingRule.id, ...data },
-        {
-          onSuccess: () => {
-            setEditingRule(null);
-            setShowForm(false);
-          },
-        }
+        { onSuccess: () => { setEditingRule(null); setShowForm(false); } }
       );
     } else {
-      createRule.mutate(data, {
-        onSuccess: () => setShowForm(false),
-      });
+      createRule.mutate(data, { onSuccess: () => setShowForm(false) });
     }
   }
 
@@ -62,31 +55,26 @@ export default function AutomationPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Automações</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Regras automáticas baseadas em métricas de campanha
-          </p>
+          <h1 className="text-2xl font-bold text-white">Automações</h1>
+          <p className="text-sm text-gray-500 mt-1">Regras automáticas baseadas em métricas de campanha</p>
         </div>
         {tab === "rules" && !showForm && (
-          <Button size="sm" onClick={() => setShowForm(true)}>
-            + Nova regra
-          </Button>
+          <Button size="sm" onClick={() => setShowForm(true)}>+ Nova regra</Button>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-white/5">
         {(["rules", "channels"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
               tab === t
-                ? "border-gray-900 text-gray-900"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-brand-400 text-brand-400"
+                : "border-transparent text-gray-600 hover:text-white"
             }`}
           >
             {t === "rules" ? "Regras de automação" : "Canais de alerta"}
@@ -94,12 +82,11 @@ export default function AutomationPage() {
         ))}
       </div>
 
-      {/* Rules tab */}
       {tab === "rules" && (
         <div className="flex flex-col gap-4">
           {showForm && (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-gray-900 mb-5">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
+              <h2 className="text-base font-semibold text-white mb-5">
                 {editingRule ? "Editar regra" : "Nova regra de automação"}
               </h2>
               <RuleForm
@@ -112,11 +99,15 @@ export default function AutomationPage() {
           )}
 
           {rulesLoading ? (
-            <div className="text-sm text-gray-400">Carregando regras...</div>
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse bg-white/5 rounded-xl" />
+              ))}
+            </div>
           ) : !rules?.length ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
+            <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-12 text-center">
               <p className="text-sm text-gray-500 font-medium">Nenhuma regra criada</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 mt-1">
                 Crie regras para pausar, escalar ou alertar automaticamente com base em métricas.
               </p>
             </div>
@@ -137,18 +128,17 @@ export default function AutomationPage() {
         </div>
       )}
 
-      {/* Channels tab */}
       {tab === "channels" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-6">
           <div className="mb-6">
-            <h2 className="text-base font-semibold text-gray-900">Configuração de canais</h2>
+            <h2 className="text-base font-semibold text-white">Configuração de canais</h2>
             <p className="text-sm text-gray-500 mt-1">
               Configure onde os alertas das regras serão enviados. Os alertas in-app são sempre ativos.
             </p>
           </div>
 
           {configLoading ? (
-            <div className="text-sm text-gray-400">Carregando...</div>
+            <div className="text-sm text-gray-600">Carregando...</div>
           ) : (
             <ChannelConfigForm
               initial={config ?? null}
@@ -158,7 +148,7 @@ export default function AutomationPage() {
           )}
 
           {saveConfig.isSuccess && (
-            <p className="mt-3 text-sm text-green-600">Configuração salva com sucesso.</p>
+            <p className="mt-3 text-sm text-green-400">Configuração salva com sucesso.</p>
           )}
         </div>
       )}

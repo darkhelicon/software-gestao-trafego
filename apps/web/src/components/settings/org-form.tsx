@@ -34,9 +34,7 @@ export function OrgForm() {
       />
 
       {update.error && (
-        <p className="text-sm text-red-600">
-          Erro ao salvar. Tente novamente.
-        </p>
+        <p className="text-sm text-red-400">Erro ao salvar. Tente novamente.</p>
       )}
 
       <div className="flex items-center gap-3">
@@ -48,7 +46,7 @@ export function OrgForm() {
           Salvar alterações
         </Button>
         {saved && (
-          <span className="text-sm text-green-600 font-medium">Salvo!</span>
+          <span className="text-sm text-green-400 font-medium">Salvo!</span>
         )}
       </div>
     </form>

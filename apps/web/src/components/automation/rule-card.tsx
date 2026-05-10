@@ -57,39 +57,35 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
   const lastLog = rule.logs?.[0];
 
   return (
-    <div className={`rounded-xl border bg-white p-5 transition-opacity ${!rule.isActive ? "opacity-60" : ""}`}>
+    <div className={`rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-opacity ${!rule.isActive ? "opacity-50" : ""}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <p className="font-semibold text-gray-900 truncate">{rule.name}</p>
+            <p className="font-semibold text-white truncate">{rule.name}</p>
             {rule.platform && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-white/5 text-gray-500">
                 {PLATFORM_LABELS[rule.platform] ?? rule.platform}
               </span>
             )}
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                rule.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-              }`}
-            >
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+              rule.isActive ? "bg-green-400/10 text-green-400" : "bg-white/5 text-gray-600"
+            }`}>
               {rule.isActive ? "Ativa" : "Pausada"}
             </span>
           </div>
 
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-500">
             SE{" "}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-gray-300">
               {conditionLabel}{" "}
               {conditionUnit === "R$" ? "R$ " : ""}{conditionVal}{conditionUnit !== "R$" ? conditionUnit : ""}
             </span>{" "}
-            → <span className="font-medium text-gray-900">{actionLabel}{actionSuffix}</span>
+            → <span className="font-medium text-gray-300">{actionLabel}{actionSuffix}</span>
           </p>
 
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-600 mt-1">
             Verifica a cada{" "}
-            {rule.checkInterval < 60
-              ? `${rule.checkInterval}min`
-              : `${rule.checkInterval / 60}h`}
+            {rule.checkInterval < 60 ? `${rule.checkInterval}min` : `${rule.checkInterval / 60}h`}
             {rule.lastRunAt && (
               <> · Última execução: {new Date(rule.lastRunAt).toLocaleString("pt-BR")}</>
             )}
@@ -97,7 +93,7 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
 
           {lastLog && (
             <div className={`mt-2 text-xs px-2 py-1 rounded inline-block ${
-              lastLog.triggered ? "bg-amber-50 text-amber-700" : "bg-gray-50 text-gray-500"
+              lastLog.triggered ? "bg-brand-400/10 text-brand-400" : "bg-white/5 text-gray-600"
             }`}>
               {lastLog.triggered
                 ? `Disparou às ${new Date(lastLog.createdAt).toLocaleString("pt-BR")}`
@@ -109,7 +105,7 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => onEdit(rule)}
-            className="text-xs text-gray-500 hover:text-gray-800 transition-colors px-2 py-1 rounded hover:bg-gray-50"
+            className="text-xs text-gray-600 hover:text-white transition-colors px-2 py-1 rounded hover:bg-white/5"
           >
             Editar
           </button>
@@ -119,8 +115,8 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
             disabled={loading}
             className={`text-xs font-medium px-2 py-1 rounded transition-colors ${
               rule.isActive
-                ? "text-orange-600 hover:bg-orange-50"
-                : "text-green-600 hover:bg-green-50"
+                ? "text-orange-400 hover:bg-orange-400/10"
+                : "text-green-400 hover:bg-green-400/10"
             }`}
           >
             {rule.isActive ? "Pausar" : "Ativar"}
@@ -131,13 +127,13 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
               <button
                 onClick={() => onDelete(rule.id)}
                 disabled={loading}
-                className="text-xs text-red-600 font-medium hover:underline"
+                className="text-xs text-red-400 font-medium hover:underline"
               >
                 Confirmar
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="text-xs text-gray-400 hover:text-gray-700"
+                className="text-xs text-gray-600 hover:text-white"
               >
                 Não
               </button>
@@ -145,7 +141,7 @@ export function RuleCard({ rule, onToggle, onDelete, onEdit, loading }: RuleCard
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors px-1"
+              className="text-xs text-gray-600 hover:text-red-400 transition-colors px-1"
             >
               ✕
             </button>

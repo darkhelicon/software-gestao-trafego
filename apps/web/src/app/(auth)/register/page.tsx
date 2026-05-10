@@ -12,7 +12,6 @@ import {
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,7 +33,7 @@ export default function RegisterPage() {
     await api.post("/api/v1/auth/register", {
       idToken,
       name: form.name || "Usuário",
-      organizationName: form.organizationName,
+      organizationName: form.organizationName || "Minha Empresa",
     });
   }
 
@@ -49,13 +48,15 @@ export default function RegisterPage() {
         form.email,
         form.password
       );
+      // Set presence cookie immediately so middleware allows /billing navigation
+      document.cookie = "firebase-session=1; path=/; max-age=3600; SameSite=Lax";
       const idToken = await credential.user.getIdToken();
       await registerInBackend(idToken);
       router.push("/billing");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar conta.";
       if (msg.includes("email-already-in-use")) {
-        setError("Este email já está em uso.");
+        setError("Este email já está em uso. Tente fazer login.");
       } else if (msg.includes("weak-password")) {
         setError("A senha deve ter pelo menos 6 caracteres.");
       } else {
@@ -72,6 +73,7 @@ export default function RegisterPage() {
 
     try {
       const credential = await signInWithPopup(auth, googleProvider);
+      document.cookie = "firebase-session=1; path=/; max-age=3600; SameSite=Lax";
       const idToken = await credential.user.getIdToken();
       await registerInBackend(idToken);
       router.push("/billing");
@@ -83,10 +85,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card>
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        Criar sua conta
-      </h2>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+      <h2 className="text-xl font-bold text-white mb-6">Criar sua conta</h2>
 
       <form onSubmit={handleEmailRegister} className="flex flex-col gap-4">
         <Input
@@ -132,22 +132,22 @@ export default function RegisterPage() {
         />
 
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+          <p className="text-sm text-red-400 bg-red-400/10 rounded-lg px-3 py-2 border border-red-400/20">
             {error}
           </p>
         )}
 
-        <Button type="submit" isLoading={isLoading} size="lg" className="w-full">
-          Criar conta
+        <Button type="submit" isLoading={isLoading} size="lg" className="w-full mt-1">
+          Criar conta grátis
         </Button>
       </form>
 
-      <div className="relative my-4">
+      <div className="relative my-5">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
+          <div className="w-full border-t border-white/10" />
         </div>
-        <div className="relative flex justify-center text-xs text-gray-500">
-          <span className="bg-white px-2">ou continue com</span>
+        <div className="relative flex justify-center text-xs text-gray-600">
+          <span className="bg-[#0a0a0a] px-2">ou continue com</span>
         </div>
       </div>
 
@@ -168,12 +168,12 @@ export default function RegisterPage() {
         Google
       </Button>
 
-      <p className="mt-6 text-center text-sm text-gray-600">
+      <p className="mt-6 text-center text-sm text-gray-500">
         Já tem conta?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline font-medium">
+        <Link href="/login" className="text-brand-400 hover:text-brand-500 font-medium transition-colors">
           Entrar
         </Link>
       </p>
-    </Card>
+    </div>
   );
 }

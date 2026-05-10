@@ -8,27 +8,23 @@ import { Button } from "@/components/ui/button";
 export default function TikTokPage() {
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">TikTok Ads</h1>
+          <h1 className="text-2xl font-bold text-white">TikTok Ads</h1>
           <p className="text-sm text-gray-500 mt-1">
             Gerencie suas conexões e campanhas do TikTok Business Center.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/tiktok/campaigns">
-            <Button variant="secondary" size="sm">
-              Ver campanhas
-            </Button>
+            <Button variant="secondary" size="sm">Ver campanhas</Button>
           </Link>
           <ConnectButton />
         </div>
       </div>
 
       <section>
-        <h2 className="text-base font-semibold text-gray-800 mb-4">
-          Conexões ativas
-        </h2>
+        <h2 className="text-base font-semibold text-white mb-4">Conexões ativas</h2>
         <ConnectionsList />
       </section>
     </div>

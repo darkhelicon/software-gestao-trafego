@@ -6,12 +6,23 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
+      {/* Background glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand-400/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-brand-400/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Helzo Scale</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Gestão de TikTok Ads e Meta Ads
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-brand-400 flex items-center justify-center">
+              <span className="text-black font-black text-lg">H</span>
+            </div>
+            <span className="text-2xl font-black text-white tracking-tight">Helzo Scale</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            Gestão profissional de TikTok Ads e Meta Ads
           </p>
         </div>
         {children}
