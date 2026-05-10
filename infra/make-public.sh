@@ -10,7 +10,7 @@ REGION="${GCP_REGION:-us-central1}"
 
 echo "Concedendo acesso público (allUsers) aos serviços Cloud Run..."
 
-for service in adflow-api adflow-web; do
+for service in helzo-scale-api helzo-scale-web; do
   gcloud run services add-iam-policy-binding "$service" \
     --region="$REGION" \
     --member="allUsers" \
@@ -21,8 +21,8 @@ done
 
 echo ""
 echo "URLs dos serviços:"
-API_URL=$(gcloud run services describe adflow-api --region="$REGION" --format="value(status.url)")
-WEB_URL=$(gcloud run services describe adflow-web --region="$REGION" --format="value(status.url)")
+API_URL=$(gcloud run services describe helzo-scale-api --region="$REGION" --format="value(status.url)")
+WEB_URL=$(gcloud run services describe helzo-scale-web --region="$REGION" --format="value(status.url)")
 
 echo "  API: ${API_URL}"
 echo "  Web: ${WEB_URL}"

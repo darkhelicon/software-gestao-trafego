@@ -5,9 +5,9 @@ steps:
     args:
       - build
       - --target=production
-      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:$SHORT_SHA
-      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:latest
-      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:latest
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/api:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/api:latest
+      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/api:latest
       - --file=apps/api/Dockerfile
       - .
 
@@ -17,9 +17,9 @@ steps:
     args:
       - build
       - --target=production
-      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:$SHORT_SHA
-      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:latest
-      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:latest
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/worker:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/worker:latest
+      - --cache-from=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/worker:latest
       - --file=apps/worker/Dockerfile
       - .
 
@@ -30,7 +30,7 @@ steps:
     args:
       - push
       - --all-tags
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/api
 
   # Push Worker
   - name: "gcr.io/cloud-builders/docker"
@@ -39,7 +39,7 @@ steps:
     args:
       - push
       - --all-tags
-      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/worker
 
   # Deploy API to Cloud Run
   - name: "gcr.io/cloud-builders/gcloud"
@@ -48,8 +48,8 @@ steps:
     args:
       - run
       - deploy
-      - adflow-api
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/api:$SHORT_SHA
+      - helzo-scale-api
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/api:$SHORT_SHA
       - --region=${_REGION}
       - --platform=managed
       - --quiet
@@ -61,8 +61,8 @@ steps:
     args:
       - run
       - deploy
-      - adflow-worker
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/adflow/worker:$SHORT_SHA
+      - helzo-scale-worker
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/helzo-scale/worker:$SHORT_SHA
       - --region=${_REGION}
       - --platform=managed
       - --quiet
