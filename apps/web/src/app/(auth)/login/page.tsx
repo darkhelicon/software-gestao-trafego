@@ -29,8 +29,15 @@ export default function LoginPage() {
       // Set presence cookie so Next.js middleware allows protected routes
       document.cookie = "firebase-session=1; path=/; max-age=3600; SameSite=Lax";
       router.push("/dashboard");
-    } catch {
-      setError("Email ou senha inválidos.");
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/network-request-failed") {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+      } else {
+        setError("Email ou senha inválidos.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +63,17 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch {
-      setError("Falha ao entrar com Google. Tente novamente.");
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/popup-blocked") {
+        setError("Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.");
+      } else if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        setError("Login cancelado. Clique novamente para tentar.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else {
+        setError("Falha ao entrar com Google. Tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +146,7 @@ export default function LoginPage() {
       <p className="mt-6 text-center text-sm text-gray-500">
         Não tem conta?{" "}
         <Link href="/register" className="text-brand-400 hover:text-brand-500 font-medium transition-colors">
-          Criar conta grátis
+          Criar conta
         </Link>
       </p>
     </div>

@@ -54,11 +54,19 @@ export default function RegisterPage() {
       await registerInBackend(idToken);
       router.push("/billing");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao criar conta.";
-      if (msg.includes("email-already-in-use")) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/email-already-in-use") {
         setError("Este email já está em uso. Tente fazer login.");
-      } else if (msg.includes("weak-password")) {
+      } else if (code === "auth/weak-password") {
         setError("A senha deve ter pelo menos 6 caracteres.");
+      } else if (code === "auth/invalid-email") {
+        setError("Email inválido.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+      } else if (err instanceof Error && err.message) {
+        setError("Erro ao criar conta. Tente novamente.");
       } else {
         setError("Erro ao criar conta. Tente novamente.");
       }
@@ -77,8 +85,17 @@ export default function RegisterPage() {
       const idToken = await credential.user.getIdToken();
       await registerInBackend(idToken);
       router.push("/billing");
-    } catch {
-      setError("Falha ao entrar com Google. Tente novamente.");
+    } catch (err) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/popup-blocked") {
+        setError("Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.");
+      } else if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        setError("Login cancelado. Clique novamente para tentar.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else {
+        setError("Falha ao entrar com Google. Tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +155,7 @@ export default function RegisterPage() {
         )}
 
         <Button type="submit" isLoading={isLoading} size="lg" className="w-full mt-1">
-          Criar conta grátis
+          Criar conta
         </Button>
       </form>
 

@@ -84,16 +84,12 @@ export default function BillingPage() {
         <div className="text-center mb-14">
           {!hasActiveSubscription ? (
             <>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-400/30 bg-brand-400/10 text-brand-400 text-xs font-medium mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-                7 dias grátis — Sem cartão de crédito
-              </div>
               <h1 className="text-4xl font-extrabold text-white mb-3">
                 Escolha seu plano
               </h1>
               <p className="text-gray-400 max-w-md mx-auto">
                 Você precisa de uma assinatura ativa para acessar a plataforma.
-                Todos os planos incluem trial gratuito de 7 dias.
+                Cancele a qualquer momento, sem fidelidade.
               </p>
             </>
           ) : (
@@ -165,7 +161,7 @@ export default function BillingPage() {
             <svg className="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Sem cobrança nos primeiros 7 dias
+            Sem fidelidade
           </span>
         </div>
       </div>

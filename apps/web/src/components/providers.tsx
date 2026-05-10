@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { auth, onAuthStateChanged } from "@/lib/firebase";
 import { useAuthStore } from "@/store/auth";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { DEMO_MODE, DEMO_ORG } from "@/lib/demo-mode";
 import type { OrgContext } from "@/store/auth";
 
@@ -47,19 +47,20 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
       setFirebaseUser(firebaseUser);
       setLoading(true);
 
-      try {
-        const me = await api.get<{
-          organizationUsers: Array<{
-            role: OrgContext["role"];
-            organization: {
-              id: string;
-              name: string;
-              slug: string;
-              subscription: OrgContext["subscription"];
-            };
-          }>;
-        }>("/api/v1/auth/me");
+      type MeResponse = {
+        organizationUsers: Array<{
+          role: OrgContext["role"];
+          organization: {
+            id: string;
+            name: string;
+            slug: string;
+            subscription: OrgContext["subscription"];
+          };
+        }>;
+      };
 
+      async function fetchAndSetOrg() {
+        const me = await api.get<MeResponse>("/api/v1/auth/me");
         const firstMembership = me.organizationUsers[0];
         if (firstMembership) {
           setCurrentOrg({
@@ -69,11 +70,26 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
             role: firstMembership.role,
             subscription: firstMembership.organization.subscription,
           });
+        } else {
+          setCurrentOrg(null);
         }
-      } catch {
-        // User authenticated in Firebase but not yet registered in DB
-        // This is expected on first login before /auth/register is called
-        setCurrentOrg(null);
+      }
+
+      try {
+        await fetchAndSetOrg();
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) {
+          // Race condition: Firebase user created but /auth/register hasn't completed yet.
+          // Retry once after a short delay.
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          try {
+            await fetchAndSetOrg();
+          } catch {
+            setCurrentOrg(null);
+          }
+        } else {
+          setCurrentOrg(null);
+        }
       } finally {
         setLoading(false);
         setInitialized(true);

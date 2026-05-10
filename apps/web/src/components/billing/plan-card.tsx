@@ -40,6 +40,7 @@ export function PlanCard({
 }: PlanCardProps) {
   const currentOrg = useAuthStore((s) => s.currentOrg);
   const firebaseUser = useAuthStore((s) => s.firebaseUser);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -47,7 +48,8 @@ export function PlanCard({
     setErrorMsg(null);
 
     if (!currentOrg?.id) {
-      // Check if Firebase user exists — authenticated but no org means incomplete registration
+      // Auth state still resolving — wait for initialization before redirecting
+      if (!isInitialized) return;
       if (firebaseUser) {
         window.location.href = "/register";
       } else {
@@ -138,7 +140,7 @@ export function PlanCard({
       )}
 
       <button
-        disabled={isCurrent || isLoading}
+        disabled={isCurrent || isLoading || !isInitialized}
         onClick={handleSelect}
         className={`w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center transition-colors disabled:opacity-50 disabled:pointer-events-none ${
           isPopular
