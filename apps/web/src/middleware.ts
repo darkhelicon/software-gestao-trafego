@@ -40,8 +40,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated users trying to access login/register: send to dashboard
-  if (pathname === "/login" || pathname === "/register") {
+  // Authenticated users trying to access login: send to dashboard.
+  // Do NOT redirect /register — a Google user who just signed in for the
+  // first time may need to complete their profile there before having an org.
+  if (pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

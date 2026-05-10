@@ -81,7 +81,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         if (err instanceof ApiError && err.status === 401) {
           // Race condition: Firebase user created but /auth/register hasn't completed yet.
           // Retry once after a short delay.
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           try {
             await fetchAndSetOrg();
           } catch {

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   auth,
   signInWithEmailAndPassword,
@@ -12,13 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const API_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
+
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Email/password login ───────────────────────────────────────────────────
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
@@ -26,9 +27,10 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Set presence cookie so Next.js middleware allows protected routes
       document.cookie = "firebase-session=1; path=/; max-age=3600; SameSite=Lax";
-      router.push("/dashboard");
+      // Full reload so onAuthStateChanged fires fresh and providers.tsx sets
+      // currentOrg before the app-layout subscription gate runs.
+      window.location.href = "/dashboard";
     } catch (err) {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/network-request-failed") {
@@ -38,11 +40,11 @@ export default function LoginPage() {
       } else {
         setError("Email ou senha inválidos.");
       }
-    } finally {
       setIsLoading(false);
     }
   }
 
+  // ── Google login ───────────────────────────────────────────────────────────
   async function handleGoogleLogin() {
     setIsLoading(true);
     setError(null);
@@ -50,18 +52,22 @@ export default function LoginPage() {
     try {
       const credential = await signInWithPopup(auth, googleProvider);
       document.cookie = "firebase-session=1; path=/; max-age=3600; SameSite=Lax";
-      // For Google sign-in, check if user exists in our DB via the providers effect
-      // The providers.tsx will call /auth/me and handle the state
-      // If user doesn't exist in DB yet, redirect to register to complete onboarding
+
+      // Check if this Google user already has an account in our DB.
+      // We do this before navigating so new users go to /register instead
+      // of /dashboard (which would redirect them to /billing with no org).
       const token = await credential.user.getIdToken();
-      const res = await fetch(`${process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001"}/api/v1/auth/me`, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      const res = await fetch(`${API_URL}/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.status === 401) {
-        // User exists in Firebase but not in DB — send to register
-        router.push("/register");
+
+      if (res.status === 401 || res.status === 404) {
+        // New Google user — go to register to complete profile
+        // window.location.href so the register page detects the Google session
+        window.location.href = "/register";
       } else {
-        router.push("/dashboard");
+        // Existing user — full reload so onAuthStateChanged fires cleanly
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       const code = (err as { code?: string }).code ?? "";
@@ -74,7 +80,6 @@ export default function LoginPage() {
       } else {
         setError("Falha ao entrar com Google. Tente novamente.");
       }
-    } finally {
       setIsLoading(false);
     }
   }
