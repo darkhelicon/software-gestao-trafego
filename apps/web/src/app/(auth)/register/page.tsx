@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   googleProvider,
+  onAuthStateChanged,
 } from "@/lib/firebase";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
@@ -40,21 +41,24 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   // True when user is already signed in with Google (came from login page)
   const [googleSession, setGoogleSession] = useState(false);
+  // Firebase restores session asynchronously — wait before rendering the form
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    // If any Firebase session is already active (Google OR email/password),
-    // show the simplified form (name + org only) and reuse the existing token.
-    // This handles:
-    //   - New Google users redirected from login page
-    //   - Ghost users: Firebase account exists but Postgres row was never created
-    //     (registration previously failed mid-flight)
-    if (!auth?.currentUser) return;
-    setGoogleSession(true);
-    setForm((prev) => ({
-      ...prev,
-      name: auth.currentUser?.displayName ?? "",
-      email: auth.currentUser?.email ?? "",
-    }));
+    // onAuthStateChanged waits for Firebase to restore the session from
+    // IndexedDB after a full-page navigation (window.location.href).
+    // Checking auth.currentUser directly would always be null at this point.
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseReady(true);
+      if (!user) return;
+      setGoogleSession(true);
+      setForm((prev) => ({
+        ...prev,
+        name: user.displayName ?? "",
+        email: user.email ?? "",
+      }));
+    });
+    return unsubscribe;
   }, []);
 
   function setField(field: keyof typeof form) {
@@ -179,6 +183,14 @@ export default function RegisterPage() {
       }
       setIsLoading(false);
     }
+  }
+
+  if (!firebaseReady) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 flex items-center justify-center min-h-[200px]">
+        <div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (
