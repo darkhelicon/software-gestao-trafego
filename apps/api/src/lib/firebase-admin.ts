@@ -6,13 +6,33 @@ const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"];
 const privateKey = process.env["FIREBASE_PRIVATE_KEY"]?.replace(/\\n/g, "\n");
 
 if (!admin.apps.length) {
-  if (projectId && clientEmail && privateKey) {
+  const useExplicitCred = Boolean(projectId && clientEmail && privateKey);
+
+  // Log initialization path so Cloud Run logs reveal which branch was taken.
+  // Never log the private key or client email — only metadata.
+  console.info(
+    JSON.stringify({
+      level: "info",
+      msg: "Firebase Admin init",
+      mode: useExplicitCred ? "service-account" : "adc",
+      projectId: projectId ?? "(missing)",
+      hasClientEmail: Boolean(clientEmail),
+      privateKeyLength: privateKey?.length ?? 0,
+      privateKeyStart: privateKey?.slice(0, 27) ?? "(missing)",
+    })
+  );
+
+  if (useExplicitCred) {
     admin.initializeApp({
-      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+      credential: admin.credential.cert({
+        projectId: projectId!,
+        clientEmail: clientEmail!,
+        privateKey: privateKey!,
+      }),
     });
   } else {
-    // Use ADC — on Cloud Run the service account is used automatically.
-    // projectId must be passed explicitly so token verification knows which project.
+    // ADC: on Cloud Run the default service account is used automatically.
+    // projectId must be passed so verifyIdToken knows which project to validate against.
     admin.initializeApp(projectId ? { projectId } : undefined);
   }
 }

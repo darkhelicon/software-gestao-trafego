@@ -47,7 +47,13 @@ export async function authenticate(
     request.userId = user.id;
     request.firebaseUid = user.firebaseUid;
     request.userEmail = user.email;
-  } catch {
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    request.log.error({
+      errorCode: e.code,
+      errorMessage: e.message,
+      firebaseProjectId: process.env["FIREBASE_PROJECT_ID"],
+    }, "authenticate: verifyIdToken failed");
     return reply.status(401).send({ success: false, error: "Invalid token" });
   }
 }

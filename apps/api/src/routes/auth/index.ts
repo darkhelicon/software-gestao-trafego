@@ -39,7 +39,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       // Firebase propagation delay; revocation is already enforced by the authenticate middleware.
       decoded = await firebaseAuth.verifyIdToken(idToken);
     } catch (err) {
-      request.log.error({ err }, "verifyIdToken failed");
+      const e = err as { code?: string; message?: string; errorInfo?: unknown };
+      request.log.error({
+        errorCode: e.code,
+        errorMessage: e.message,
+        errorInfo: e.errorInfo,
+        firebaseProjectId: process.env["FIREBASE_PROJECT_ID"],
+        tokenPrefix: idToken.slice(0, 20),
+      }, "verifyIdToken failed");
       return reply.status(401).send({ success: false, error: "Invalid token" });
     }
 
@@ -183,7 +190,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     try {
       decoded = await firebaseAuth.verifyIdToken(token);
     } catch (err) {
-      request.log.warn({ err }, "sync: verifyIdToken failed");
+      const e = err as { code?: string; message?: string; errorInfo?: unknown };
+      request.log.warn({
+        errorCode: e.code,
+        errorMessage: e.message,
+        errorInfo: e.errorInfo,
+        firebaseProjectId: process.env["FIREBASE_PROJECT_ID"],
+      }, "sync: verifyIdToken failed");
       return reply.status(401).send({ success: false, error: "Invalid token" });
     }
 
