@@ -50,15 +50,14 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ success: false, error: "Invalid token" });
     }
 
-    // Idempotent: if user exists, return it
+    const orgIncludeOne = {
+      organizationUsers: { include: { organization: true }, take: 1 },
+    } as const;
+
+    // Idempotent: check by firebaseUid first
     const existing = await app.prisma.user.findUnique({
       where: { firebaseUid: decoded.uid },
-      include: {
-        organizationUsers: {
-          include: { organization: true },
-          take: 1,
-        },
-      },
+      include: orgIncludeOne,
     });
 
     if (existing) {
@@ -69,6 +68,31 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           organization: existing.organizationUsers[0]?.organization ?? null,
         },
       });
+    }
+
+    // Same email, different UID — user previously registered with email/password
+    // and is now signing in with Google. Link the accounts by updating firebaseUid.
+    if (decoded.email) {
+      const existingByEmail = await app.prisma.user.findUnique({
+        where: { email: decoded.email },
+        include: orgIncludeOne,
+      });
+
+      if (existingByEmail) {
+        const linked = await app.prisma.user.update({
+          where: { email: decoded.email },
+          data: { firebaseUid: decoded.uid },
+          include: orgIncludeOne,
+        });
+        request.log.info({ uid: decoded.uid, email: decoded.email }, "register: linked Google UID to existing account");
+        return reply.status(200).send({
+          success: true,
+          data: {
+            user: linked,
+            organization: linked.organizationUsers[0]?.organization ?? null,
+          },
+        });
+      }
     }
 
     // Create user + org + membership in a transaction
@@ -221,6 +245,27 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         success: true,
         data: { user: existing, needsOnboarding: false },
       });
+    }
+
+    // Same email, different UID — link Google account to existing DB record.
+    if (decoded.email) {
+      const existingByEmail = await app.prisma.user.findUnique({
+        where: { email: decoded.email },
+        include: orgInclude,
+      });
+
+      if (existingByEmail) {
+        const linked = await app.prisma.user.update({
+          where: { email: decoded.email },
+          data: { firebaseUid: decoded.uid },
+          include: orgInclude,
+        });
+        request.log.info({ uid: decoded.uid, email: decoded.email }, "sync: linked Google UID to existing account");
+        return reply.send({
+          success: true,
+          data: { user: linked, needsOnboarding: false },
+        });
+      }
     }
 
     // Ghost user — create with Firebase defaults so checkout can proceed.
