@@ -75,17 +75,40 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
         }
       }
 
+      type SyncData = {
+        needsOnboarding: boolean;
+        user: MeResponse;
+      };
+
       try {
         await fetchAndSetOrg();
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
-          // Race condition: Firebase user created but /auth/register hasn't completed yet.
-          // Retry once after a short delay.
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // /auth/me returned 401: either a race condition (registration in-flight)
+          // or a ghost user (Firebase account exists but Postgres row doesn't).
+          // Retry once, then fall back to /auth/sync which creates the DB record.
+          await new Promise((resolve) => setTimeout(resolve, 1200));
           try {
             await fetchAndSetOrg();
           } catch {
-            setCurrentOrg(null);
+            // Both /auth/me attempts failed — resolve ghost user via /auth/sync
+            try {
+              const sync = await api.post<SyncData>("/api/v1/auth/sync", {});
+              const firstMembership = sync.user?.organizationUsers?.[0];
+              if (firstMembership) {
+                setCurrentOrg({
+                  id: firstMembership.organization.id,
+                  name: firstMembership.organization.name,
+                  slug: firstMembership.organization.slug,
+                  role: firstMembership.role,
+                  subscription: firstMembership.organization.subscription,
+                });
+              } else {
+                setCurrentOrg(null);
+              }
+            } catch {
+              setCurrentOrg(null);
+            }
           }
         } else {
           setCurrentOrg(null);

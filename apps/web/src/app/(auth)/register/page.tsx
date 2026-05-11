@@ -42,21 +42,19 @@ export default function RegisterPage() {
   const [googleSession, setGoogleSession] = useState(false);
 
   useEffect(() => {
-    // Detect if a Google Firebase session already exists.
-    // This happens when a new Google user is redirected here from the login page —
-    // they already completed Firebase OAuth but aren't registered in our DB yet.
+    // If any Firebase session is already active (Google OR email/password),
+    // show the simplified form (name + org only) and reuse the existing token.
+    // This handles:
+    //   - New Google users redirected from login page
+    //   - Ghost users: Firebase account exists but Postgres row was never created
+    //     (registration previously failed mid-flight)
     if (!auth?.currentUser) return;
-    const isGoogle = auth.currentUser.providerData.some(
-      (p) => p.providerId === "google.com"
-    );
-    if (isGoogle) {
-      setGoogleSession(true);
-      setForm((prev) => ({
-        ...prev,
-        name: auth.currentUser?.displayName ?? "",
-        email: auth.currentUser?.email ?? "",
-      }));
-    }
+    setGoogleSession(true);
+    setForm((prev) => ({
+      ...prev,
+      name: auth.currentUser?.displayName ?? "",
+      email: auth.currentUser?.email ?? "",
+    }));
   }, []);
 
   function setField(field: keyof typeof form) {
