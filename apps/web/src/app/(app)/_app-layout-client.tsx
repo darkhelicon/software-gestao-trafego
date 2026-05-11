@@ -145,7 +145,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="h-14 flex items-center px-4 border-b border-white/5">
           <Link href="/dashboard">
-            <img src="/helzo-scale-logo.png" alt="Helzo Scale" className="h-10 w-auto" />
+            <img src="/helzo-scale.png" alt="Helzo Scale" className="h-12 w-auto" />
           </Link>
         </div>
 
@@ -225,7 +225,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
       {/* Mobile topbar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-[#0d0d0d] border-b border-white/5 flex items-center px-4 justify-between">
         <Link href="/dashboard">
-          <img src="/helzo-scale-logo.png" alt="Helzo Scale" className="h-10 w-auto" />
+          <img src="/helzo-scale.png" alt="Helzo Scale" className="h-12 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
           <NotificationBell />

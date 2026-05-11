@@ -68,7 +68,7 @@ export default function BillingPage() {
       <header className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/">
-            <img src="/helzo-scale-logo.png" alt="Helzo Scale" className="h-10 w-auto" />
+            <img src="/helzo-scale.png" alt="Helzo Scale" className="h-14 w-auto" />
           </Link>
           {hasActiveSubscription && (
             <Link
