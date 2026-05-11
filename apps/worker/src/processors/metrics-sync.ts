@@ -88,10 +88,12 @@ async function syncTikTok({
       const clicks = row.clicks;
       const conversions = row.conversion;
 
+      const revenue = row.total_purchase_value;
       const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
       const cpc = clicks > 0 ? spend / clicks : 0;
       const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
       const cpa = conversions > 0 ? spend / conversions : 0;
+      const roas = spend > 0 ? revenue / spend : 0;
 
       return prisma.reportDaily.upsert({
         where: {
@@ -101,7 +103,7 @@ async function syncTikTok({
             date,
           },
         },
-        update: { impressions: BigInt(impressions), clicks: BigInt(clicks), spend, conversions, revenue: 0, ctr, cpc, cpm, cpa, roas: 0 },
+        update: { impressions: BigInt(impressions), clicks: BigInt(clicks), spend, conversions, revenue, ctr, cpc, cpm, cpa, roas },
         create: {
           organizationId,
           advertiserAccountId: account!.id,
@@ -112,12 +114,12 @@ async function syncTikTok({
           clicks: BigInt(clicks),
           spend,
           conversions,
-          revenue: 0,
+          revenue,
           ctr,
           cpc,
           cpm,
           cpa,
-          roas: 0,
+          roas,
         },
       });
     });
@@ -176,10 +178,12 @@ async function syncMeta({
       const clicks = row.clicks;
       const conversions = row.conversions;
 
+      const revenue = row.revenue;
       const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
       const cpc = clicks > 0 ? spend / clicks : 0;
       const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
       const cpa = conversions > 0 ? spend / conversions : 0;
+      const roas = spend > 0 ? revenue / spend : 0;
 
       return prisma.reportDaily.upsert({
         where: {
@@ -189,7 +193,7 @@ async function syncMeta({
             date,
           },
         },
-        update: { impressions: BigInt(impressions), clicks: BigInt(clicks), spend, conversions, revenue: 0, ctr, cpc, cpm, cpa, roas: 0 },
+        update: { impressions: BigInt(impressions), clicks: BigInt(clicks), spend, conversions, revenue, ctr, cpc, cpm, cpa, roas },
         create: {
           organizationId,
           advertiserAccountId: account!.id,
@@ -200,12 +204,12 @@ async function syncMeta({
           clicks: BigInt(clicks),
           spend,
           conversions,
-          revenue: 0,
+          revenue,
           ctr,
           cpc,
           cpm,
           cpa,
-          roas: 0,
+          roas,
         },
       });
     });

@@ -286,6 +286,7 @@ export interface MetaInsightRow {
   ctr: number;
   conversions: number;
   cost_per_conversion: number;
+  revenue: number;
 }
 
 export async function metaGetAccountInsights(
@@ -310,6 +311,7 @@ export async function metaGetAccountInsights(
       ctr: string;
       actions?: Array<{ action_type: string; value: string }>;
       cost_per_action_type?: Array<{ action_type: string; value: string }>;
+      action_values?: Array<{ action_type: string; value: string }>;
     }>;
     paging?: { next?: string };
   }>(
@@ -317,7 +319,7 @@ export async function metaGetAccountInsights(
     encryptedToken,
     {
       fields:
-        "campaign_id,campaign_name,impressions,clicks,spend,cpc,cpm,ctr,actions,cost_per_action_type",
+        "campaign_id,campaign_name,impressions,clicks,spend,cpc,cpm,ctr,actions,cost_per_action_type,action_values",
       time_range: JSON.stringify({ since: startDate, until: endDate }),
       level: "campaign",
       time_increment: "1",
@@ -326,16 +328,18 @@ export async function metaGetAccountInsights(
   );
 
   function parseRow(row: (typeof initialData.data)[0]): MetaInsightRow {
-    const convAction = row.actions?.find(
-      (a) => a.action_type === "offsite_conversion.fb_pixel_purchase" ||
-             a.action_type === "purchase" ||
-             a.action_type === "omni_purchase"
-    );
-    const cpaAction = row.cost_per_action_type?.find(
-      (a) => a.action_type === "offsite_conversion.fb_pixel_purchase" ||
-             a.action_type === "purchase" ||
-             a.action_type === "omni_purchase"
-    );
+    const PURCHASE_ACTIONS = [
+      "offsite_conversion.fb_pixel_purchase",
+      "purchase",
+      "omni_purchase",
+    ];
+
+    const convAction = row.actions?.find((a) => PURCHASE_ACTIONS.includes(a.action_type));
+    const cpaAction = row.cost_per_action_type?.find((a) => PURCHASE_ACTIONS.includes(a.action_type));
+
+    // Revenue from action_values (purchase value reported by Meta Pixel)
+    const revenueAction = row.action_values?.find((a) => PURCHASE_ACTIONS.includes(a.action_type));
+    const revenue = revenueAction ? parseFloat(revenueAction.value) || 0 : 0;
 
     return {
       campaign_id: row.campaign_id,
@@ -349,6 +353,7 @@ export async function metaGetAccountInsights(
       ctr: parseFloat(row.ctr) || 0,
       conversions: convAction ? parseInt(convAction.value, 10) : 0,
       cost_per_conversion: cpaAction ? parseFloat(cpaAction.value) : 0,
+      revenue,
     };
   }
 
@@ -366,6 +371,51 @@ export async function metaGetAccountInsights(
   }
 
   return rows;
+}
+
+// ========================
+// Account balance
+// ========================
+
+export async function metaGetAdAccountBalance(
+  encryptedToken: string,
+  accountId: string // "act_123456789"
+): Promise<number> {
+  const data = await metaGet<{ balance: string; currency: string }>(
+    `/${accountId}`,
+    encryptedToken,
+    { fields: "balance,currency" }
+  );
+  // Meta returns balance in the account's currency minor unit (cents) for prepaid accounts,
+  // or as a decimal string for postpaid. Parse as float to handle both cases.
+  return parseFloat(data.balance) || 0;
+}
+
+// ========================
+// Rejected campaigns
+// ========================
+
+// Returns external campaign IDs whose effective_status is DISAPPROVED or WITH_ISSUES.
+export async function metaGetRejectedCampaigns(
+  encryptedToken: string,
+  accountId: string // "act_123456789"
+): Promise<string[]> {
+  const data = await metaGet<{ data: Array<{ id: string; effective_status: string }> }>(
+    `/${accountId}/campaigns`,
+    encryptedToken,
+    {
+      fields: "id,effective_status",
+      filtering: JSON.stringify([
+        {
+          field: "effective_status",
+          operator: "IN",
+          value: ["DISAPPROVED", "WITH_ISSUES"],
+        },
+      ]),
+      limit: "500",
+    }
+  );
+  return (data.data ?? []).map((c) => c.id);
 }
 
 export { encrypt, decrypt };

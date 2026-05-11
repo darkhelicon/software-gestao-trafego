@@ -1,10 +1,14 @@
 import type { Job } from "bullmq";
-import { prisma } from "@helzo-scale/database";
+import { prisma, Prisma } from "@helzo-scale/database";
 import {
   tiktokUpdateCampaignStatus,
   tiktokUpdateCampaignBudget,
+  tiktokGetAdvertiserBalance,
+  tiktokGetRejectedCampaigns,
   metaUpdateCampaignStatus,
   metaUpdateCampaignBudget,
+  metaGetAdAccountBalance,
+  metaGetRejectedCampaigns,
 } from "@helzo-scale/integrations";
 
 interface EvaluatePayload {
@@ -24,6 +28,15 @@ interface CampaignMetrics {
   ctr: number;
 }
 
+type AutomationRule = Awaited<ReturnType<typeof prisma.automationRule.findUnique>>;
+type CampaignWithAccount = Awaited<ReturnType<typeof prisma.campaign.findMany>>[0] & {
+  advertiserAccount: {
+    externalId: string;
+    tiktokConnection: { accessToken: string } | null;
+    metaConnection: { accessToken: string } | null;
+  };
+};
+
 export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
   const { ruleId } = job.data;
 
@@ -37,7 +50,229 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
     return;
   }
 
-  // Aggregate last 3 days of ReportDaily per campaign
+  // Route to the appropriate evaluation strategy based on condition
+  if (rule.condition === "BALANCE_BELOW") {
+    await evaluateBalanceBelow(rule);
+  } else if (rule.condition === "REJECTED") {
+    await evaluateRejected(rule);
+  } else {
+    await evaluateMetricsCondition(rule);
+  }
+
+  await prisma.automationRule.update({ where: { id: ruleId }, data: { lastRunAt: new Date() } });
+}
+
+// ========================
+// BALANCE_BELOW — real-time account balance check
+// ========================
+
+async function evaluateBalanceBelow(rule: NonNullable<AutomationRule>): Promise<void> {
+  const threshold = Number(rule.conditionValue);
+
+  const accounts = await prisma.advertiserAccount.findMany({
+    where: {
+      organizationId: rule.organizationId,
+      isActive: true,
+      ...(rule.platform ? { platform: rule.platform } : {}),
+    },
+    include: {
+      tiktokConnection: { select: { accessToken: true } },
+      metaConnection: { select: { accessToken: true } },
+    },
+  });
+
+  for (const account of accounts) {
+    let balance = 0;
+
+    try {
+      if (account.platform === "TIKTOK" && account.tiktokConnection) {
+        balance = await tiktokGetAdvertiserBalance(
+          account.tiktokConnection.accessToken,
+          account.externalId
+        );
+      } else if (account.platform === "META" && account.metaConnection) {
+        balance = await metaGetAdAccountBalance(
+          account.metaConnection.accessToken,
+          account.externalId
+        );
+      }
+    } catch (err) {
+      console.warn(`[automation] BALANCE_BELOW: failed to get balance for account ${account.id}:`, err);
+      continue;
+    }
+
+    if (balance >= threshold) continue;
+
+    // Cooldown: skip if already actioned in last 6h for this account
+    const recentLog = await prisma.automationLog.findFirst({
+      where: {
+        ruleId: rule.id,
+        createdAt: { gte: new Date(Date.now() - 6 * 60 * 60 * 1000) },
+        detail: { path: ["advertiserAccountId"], equals: account.id },
+      },
+    });
+    if (recentLog) continue;
+
+    // For BALANCE_BELOW, trigger SEND_ALERT or PAUSE all campaigns on that account
+    let success = false;
+    if (rule.action === "SEND_ALERT") {
+      const { notificationQueue } = await import("../queues/index.js");
+      await notificationQueue.add(
+        "alert",
+        {
+          organizationId: rule.organizationId,
+          title: `Alerta: ${rule.name}`,
+          body: `Conta "${account.name}" com saldo baixo: ${balance.toFixed(2)} (limite: ${threshold.toFixed(2)})`,
+          ruleId: rule.id,
+        },
+        { removeOnComplete: 30, removeOnFail: 10 }
+      );
+      success = true;
+    } else if (rule.action === "PAUSE_CAMPAIGN") {
+      // Pause all active campaigns on this account
+      const campaigns = await prisma.campaign.findMany({
+        where: { advertiserAccountId: account.id, status: "ACTIVE" },
+        select: { id: true, externalId: true },
+      });
+      for (const campaign of campaigns) {
+        try {
+          await prisma.campaign.update({ where: { id: campaign.id }, data: { status: "PAUSED" } });
+          if (account.platform === "TIKTOK" && account.tiktokConnection && campaign.externalId) {
+            await tiktokUpdateCampaignStatus(
+              account.tiktokConnection.accessToken,
+              account.externalId,
+              campaign.externalId,
+              "DISABLE"
+            );
+          } else if (account.platform === "META" && account.metaConnection && campaign.externalId) {
+            await metaUpdateCampaignStatus(
+              account.metaConnection.accessToken,
+              campaign.externalId,
+              "PAUSED"
+            );
+          }
+          success = true;
+        } catch (err) {
+          console.error(`[automation] BALANCE_BELOW PAUSE failed for campaign ${campaign.id}:`, err);
+        }
+      }
+    }
+
+    await prisma.automationLog.create({
+      data: {
+        ruleId: rule.id,
+        triggered: true,
+        detail: {
+          advertiserAccountId: account.id,
+          accountName: account.name,
+          balance,
+          threshold,
+          action: rule.action,
+          success,
+        },
+      },
+    });
+  }
+}
+
+// ========================
+// REJECTED — real-time campaign status check
+// ========================
+
+async function evaluateRejected(rule: NonNullable<AutomationRule>): Promise<void> {
+  const accounts = await prisma.advertiserAccount.findMany({
+    where: {
+      organizationId: rule.organizationId,
+      isActive: true,
+      ...(rule.platform ? { platform: rule.platform } : {}),
+    },
+    include: {
+      tiktokConnection: { select: { accessToken: true } },
+      metaConnection: { select: { accessToken: true } },
+    },
+  });
+
+  for (const account of accounts) {
+    let rejectedExternalIds: string[] = [];
+
+    try {
+      if (account.platform === "TIKTOK" && account.tiktokConnection) {
+        rejectedExternalIds = await tiktokGetRejectedCampaigns(
+          account.tiktokConnection.accessToken,
+          account.externalId
+        );
+      } else if (account.platform === "META" && account.metaConnection) {
+        rejectedExternalIds = await metaGetRejectedCampaigns(
+          account.metaConnection.accessToken,
+          account.externalId
+        );
+      }
+    } catch (err) {
+      console.warn(`[automation] REJECTED: failed to fetch rejected campaigns for account ${account.id}:`, err);
+      continue;
+    }
+
+    if (!rejectedExternalIds.length) continue;
+
+    // Resolve external IDs to internal DB IDs
+    const campaigns = await prisma.campaign.findMany({
+      where: {
+        advertiserAccountId: account.id,
+        externalId: { in: rejectedExternalIds },
+      },
+      select: { id: true, externalId: true, name: true },
+    });
+
+    for (const campaign of campaigns) {
+      // Cooldown: skip if already actioned in last 6h
+      const recentLog = await prisma.automationLog.findFirst({
+        where: {
+          ruleId: rule.id,
+          createdAt: { gte: new Date(Date.now() - 6 * 60 * 60 * 1000) },
+          detail: { path: ["campaignId"], equals: campaign.id },
+        },
+      });
+      if (recentLog) continue;
+
+      let success = false;
+      if (rule.action === "SEND_ALERT") {
+        const { notificationQueue } = await import("../queues/index.js");
+        await notificationQueue.add(
+          "alert",
+          {
+            organizationId: rule.organizationId,
+            title: `Alerta: ${rule.name}`,
+            body: `Campanha "${campaign.name}" foi reprovada/rejeitada pela plataforma.`,
+            ruleId: rule.id,
+            campaignId: campaign.id,
+          },
+          { removeOnComplete: 30, removeOnFail: 10 }
+        );
+        success = true;
+      }
+
+      await prisma.automationLog.create({
+        data: {
+          ruleId: rule.id,
+          triggered: true,
+          detail: {
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            externalId: campaign.externalId,
+            action: rule.action,
+            success,
+          },
+        },
+      });
+    }
+  }
+}
+
+// ========================
+// Metrics-based conditions (CPA, ROAS, CTR, SPEND)
+// ========================
+
+async function evaluateMetricsCondition(rule: NonNullable<AutomationRule>): Promise<void> {
   const since = new Date();
   since.setDate(since.getDate() - 3);
 
@@ -59,11 +294,16 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
   });
 
   if (!rows.length) {
-    await prisma.automationRule.update({ where: { id: ruleId }, data: { lastRunAt: new Date() } });
+    await prisma.automationLog.create({
+      data: {
+        ruleId: rule.id,
+        triggered: false,
+        detail: { evaluated: 0, triggered: 0, reason: "no_report_data" },
+      },
+    });
     return;
   }
 
-  // Get campaign details
   const campaignIds = rows.map((r) => r.campaignId!);
   const campaigns = await prisma.campaign.findMany({
     where: { id: { in: campaignIds }, status: { in: ["ACTIVE", "PAUSED"] } },
@@ -101,7 +341,6 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
       };
     });
 
-  // Filter campaigns that meet the condition
   const triggered = metrics.filter((m) => conditionMet(rule.condition, threshold, m));
 
   let actioned = 0;
@@ -109,10 +348,9 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
   for (const m of triggered) {
     const campaign = campaignMap[m.campaignId]!;
 
-    // Cooldown: skip if actioned by this rule in last 6h
     const recentLog = await prisma.automationLog.findFirst({
       where: {
-        ruleId,
+        ruleId: rule.id,
         createdAt: { gte: new Date(Date.now() - 6 * 60 * 60 * 1000) },
         detail: { path: ["campaignId"], equals: m.campaignId },
       },
@@ -123,7 +361,7 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
 
     await prisma.automationLog.create({
       data: {
-        ruleId,
+        ruleId: rule.id,
         triggered: true,
         detail: {
           campaignId: m.campaignId,
@@ -140,20 +378,17 @@ export async function processAutomationEvaluate(job: Job<EvaluatePayload>) {
     if (success) actioned++;
   }
 
-  // Log evaluation even when nothing triggered (for visibility)
   if (!triggered.length) {
     await prisma.automationLog.create({
       data: {
-        ruleId,
+        ruleId: rule.id,
         triggered: false,
         detail: { evaluated: metrics.length, triggered: 0 },
       },
     });
   }
 
-  await prisma.automationRule.update({ where: { id: ruleId }, data: { lastRunAt: new Date() } });
-
-  console.log(`[automation] Rule ${ruleId}: evaluated ${metrics.length} campaigns, actioned ${actioned}`);
+  console.log(`[automation] Rule ${rule.id}: evaluated ${metrics.length} campaigns, actioned ${actioned}`);
 }
 
 // ========================
@@ -166,17 +401,12 @@ function conditionMet(
   m: CampaignMetrics
 ): boolean {
   switch (condition) {
-    case "CPA_ABOVE":    return m.cpa > 0 && m.cpa > threshold;
-    case "CPA_BELOW":    return m.cpa > 0 && m.cpa < threshold;
-    case "ROAS_ABOVE":   return m.roas > threshold;
-    case "ROAS_BELOW":   return m.spend > 0 && m.roas < threshold;
-    case "CTR_BELOW":    return m.impressions > 0 && m.ctr < threshold;
-    case "SPEND_ABOVE":  return m.spend > threshold;
-    // BALANCE_BELOW and REJECTED require real-time platform API calls (not in ReportDaily).
-    // These are evaluated by a dedicated polling processor (future phase).
-    case "BALANCE_BELOW":
-    case "REJECTED":
-      return false;
+    case "CPA_ABOVE":   return m.cpa > 0 && m.cpa > threshold;
+    case "CPA_BELOW":   return m.cpa > 0 && m.cpa < threshold;
+    case "ROAS_ABOVE":  return m.roas > threshold;
+    case "ROAS_BELOW":  return m.spend > 0 && m.roas < threshold;
+    case "CTR_BELOW":   return m.impressions > 0 && m.ctr < threshold;
+    case "SPEND_ABOVE": return m.spend > threshold;
     default:
       console.warn(`[automation] Unknown condition: ${condition}`);
       return false;
@@ -186,12 +416,12 @@ function conditionMet(
 function conditionValue(condition: string, m: CampaignMetrics): number {
   switch (condition) {
     case "CPA_ABOVE":
-    case "CPA_BELOW":    return m.cpa;
+    case "CPA_BELOW":   return m.cpa;
     case "ROAS_ABOVE":
-    case "ROAS_BELOW":   return m.roas;
-    case "CTR_BELOW":    return m.ctr;
-    case "SPEND_ABOVE":  return m.spend;
-    default:             return 0;
+    case "ROAS_BELOW":  return m.roas;
+    case "CTR_BELOW":   return m.ctr;
+    case "SPEND_ABOVE": return m.spend;
+    default:            return 0;
   }
 }
 
@@ -200,17 +430,11 @@ function conditionValue(condition: string, m: CampaignMetrics): number {
 // ========================
 
 async function executeAction(
-  rule: Awaited<ReturnType<typeof prisma.automationRule.findUnique>>,
-  campaign: Awaited<ReturnType<typeof prisma.campaign.findMany>>[0] & {
-    advertiserAccount: {
-      externalId: string;
-      tiktokConnection: { accessToken: string } | null;
-      metaConnection: { accessToken: string } | null;
-    };
-  },
+  rule: NonNullable<AutomationRule>,
+  campaign: CampaignWithAccount,
   metrics: CampaignMetrics
 ): Promise<boolean> {
-  if (!rule || !campaign.externalId) return false;
+  if (!campaign.externalId) return false;
 
   const platform = campaign.platform;
   const externalId = campaign.externalId;
@@ -308,9 +532,9 @@ async function executeAction(
         return true;
       }
 
-      case "DUPLICATE_CAMPAIGN":
-        console.log(`[automation] DUPLICATE_CAMPAIGN for ${campaign.id} — Phase 9`);
-        return false;
+      case "DUPLICATE_CAMPAIGN": {
+        return await duplicateCampaign(rule, campaign);
+      }
 
       default:
         return false;
@@ -321,13 +545,124 @@ async function executeAction(
   }
 }
 
+// ========================
+// DUPLICATE_CAMPAIGN — creates a copy via the campaign.create queue
+// ========================
+
+async function duplicateCampaign(
+  rule: NonNullable<AutomationRule>,
+  campaign: CampaignWithAccount
+): Promise<boolean> {
+  const { campaignQueue } = await import("../queues/index.js");
+  const config = campaign.config as Record<string, unknown> | null;
+  const acct = campaign.advertiserAccount;
+
+  // Fetch connection IDs from the AdvertiserAccount (not exposed on CampaignWithAccount type)
+  const accountDetails = await prisma.advertiserAccount.findUnique({
+    where: { id: campaign.advertiserAccountId },
+    select: { tiktokConnectionId: true, metaConnectionId: true },
+  });
+  if (!accountDetails) return false;
+
+  const connectionId =
+    campaign.platform === "TIKTOK"
+      ? accountDetails.tiktokConnectionId
+      : accountDetails.metaConnectionId;
+
+  if (!connectionId) return false;
+
+  // Create the new Campaign DB record (DRAFT) — the worker fills in externalId after creation
+  const newCampaign = await prisma.campaign.create({
+    data: {
+      organizationId: rule.organizationId,
+      advertiserAccountId: campaign.advertiserAccountId,
+      platform: campaign.platform,
+      name: `${campaign.name} (Cópia)`,
+      status: "DRAFT",
+      budget: campaign.budget,
+      config: campaign.config !== null
+        ? (campaign.config as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
+    },
+  });
+
+  // Build the platform-specific payload for the campaign.create worker
+  let itemPayload: Prisma.InputJsonValue;
+
+  if (campaign.platform === "TIKTOK") {
+    const tiktokPayload: Record<string, unknown> = {
+      campaignId: newCampaign.id,
+      advertiserId: acct.externalId,
+      connectionId,
+      name: newCampaign.name,
+      objectiveType: (config?.["objectiveType"] as string | undefined) ?? "TRAFFIC",
+      budgetMode: (config?.["budgetMode"] as string | undefined) ?? "BUDGET_MODE_DAY",
+    };
+    if (campaign.budget) tiktokPayload["budget"] = Number(campaign.budget);
+    itemPayload = tiktokPayload as Prisma.InputJsonValue;
+  } else {
+    const metaPayload: Record<string, unknown> = {
+      campaignId: newCampaign.id,
+      accountId: acct.externalId,
+      connectionId,
+      name: newCampaign.name,
+      objective: (config?.["objective"] as string | undefined) ?? "OUTCOME_TRAFFIC",
+      budgetType: (config?.["budgetType"] as string | undefined) ?? "daily",
+      status: "PAUSED", // duplicates start paused for review
+    };
+    if (campaign.budget) metaPayload["budget"] = Number(campaign.budget);
+    itemPayload = metaPayload as Prisma.InputJsonValue;
+  }
+
+  // Create the CampaignJob envelope in DB
+  const campaignJob = await prisma.campaignJob.create({
+    data: {
+      organizationId: rule.organizationId,
+      platform: campaign.platform,
+      status: "PENDING",
+      totalItems: 1,
+    },
+  });
+
+  const jobItem = await prisma.campaignJobItem.create({
+    data: {
+      jobId: campaignJob.id,
+      status: "PENDING",
+      payload: itemPayload,
+    },
+  });
+
+  // Enqueue to BullMQ
+  const bullJob = await campaignQueue.add(
+    "create",
+    {
+      jobId: campaignJob.id,
+      itemId: jobItem.id,
+      organizationId: rule.organizationId,
+      platform: campaign.platform,
+    },
+    { removeOnComplete: 30, removeOnFail: 20 }
+  );
+
+  // Record the BullMQ job ID for traceability
+  await prisma.campaignJob.update({
+    where: { id: campaignJob.id },
+    data: { bullJobId: bullJob.id ?? null },
+  });
+
+  console.log(
+    `[automation] DUPLICATE_CAMPAIGN: enqueued job ${bullJob.id} for campaign ${campaign.id} → new campaign ${newCampaign.id}`
+  );
+  return true;
+}
+
 function buildAlertBody(condition: string, campaignName: string, m: CampaignMetrics): string {
   const labels: Record<string, string> = {
-    CPA_ABOVE: `CPA alto: R$ ${m.cpa.toFixed(2)}`,
-    CPA_BELOW: `CPA baixo: R$ ${m.cpa.toFixed(2)}`,
+    CPA_ABOVE:  `CPA alto: R$ ${m.cpa.toFixed(2)}`,
+    CPA_BELOW:  `CPA baixo: R$ ${m.cpa.toFixed(2)}`,
     ROAS_ABOVE: `ROAS alto: ${m.roas.toFixed(2)}x`,
     ROAS_BELOW: `ROAS baixo: ${m.roas.toFixed(2)}x`,
-    CTR_BELOW: `CTR baixo: ${m.ctr.toFixed(2)}%`,
+    CTR_BELOW:  `CTR baixo: ${m.ctr.toFixed(2)}%`,
     SPEND_ABOVE: `Gasto elevado: R$ ${m.spend.toFixed(2)}`,
   };
   return `Campanha "${campaignName}": ${labels[condition] ?? condition}`;

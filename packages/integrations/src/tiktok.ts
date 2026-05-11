@@ -292,6 +292,8 @@ export interface TikTokDailyReportRow {
   cpm: number;
   conversion: number;
   cost_per_conversion: number;
+  total_purchase_value: number;
+  purchase_roas: number;
 }
 
 export async function tiktokGetDailyReport(
@@ -318,6 +320,8 @@ export async function tiktokGetDailyReport(
         "cpm",
         "conversion",
         "cost_per_conversion",
+        "total_purchase_value",
+        "purchase_roas",
       ],
       start_date: startDate,
       end_date: endDate,
@@ -340,6 +344,8 @@ export async function tiktokGetDailyReport(
         conversion: string;
         cost_per_conversion: string;
         campaign_name: string;
+        total_purchase_value: string;
+        purchase_roas: string;
       };
     }>;
   }>;
@@ -360,7 +366,63 @@ export async function tiktokGetDailyReport(
     cpm: parseFloat(row.metrics.cpm) || 0,
     conversion: parseInt(row.metrics.conversion, 10) || 0,
     cost_per_conversion: parseFloat(row.metrics.cost_per_conversion) || 0,
+    total_purchase_value: parseFloat(row.metrics.total_purchase_value) || 0,
+    purchase_roas: parseFloat(row.metrics.purchase_roas) || 0,
   }));
+}
+
+// ========================
+// Account balance
+// ========================
+
+export async function tiktokGetAdvertiserBalance(
+  encryptedToken: string,
+  advertiserId: string
+): Promise<number> {
+  const data = await tiktokGet<{
+    list: Array<{ advertiser_id: string; balance: string }>;
+  }>(
+    "/advertiser/info/",
+    encryptedToken,
+    {
+      advertiser_ids: JSON.stringify([advertiserId]),
+      fields: JSON.stringify(["balance"]),
+    }
+  );
+  const entry = data.list?.[0];
+  return entry ? parseFloat(entry.balance) || 0 : 0;
+}
+
+// ========================
+// Rejected campaigns
+// ========================
+
+// Returns external campaign IDs whose delivery is blocked due to review failure.
+export async function tiktokGetRejectedCampaigns(
+  encryptedToken: string,
+  advertiserId: string
+): Promise<string[]> {
+  const data = await tiktokGet<{
+    list: Array<{ campaign_id: string; secondary_status: string }>;
+  }>(
+    "/campaign/get/",
+    encryptedToken,
+    {
+      advertiser_id: advertiserId,
+      fields: JSON.stringify(["campaign_id", "secondary_status"]),
+    }
+  );
+
+  const REJECTED_SECONDARY = new Set([
+    "CAMPAIGN_STATUS_ADVERTISER_AUDIT_DENY",
+    "ADGROUP_STATUS_AD_AUDIT_FAIL",
+    "AD_STATUS_AUDIT_DENY",
+    "CAMPAIGN_STATUS_DISABLE",
+  ]);
+
+  return (data.list ?? [])
+    .filter((c) => REJECTED_SECONDARY.has(c.secondary_status))
+    .map((c) => c.campaign_id);
 }
 
 export { encrypt, decrypt };
