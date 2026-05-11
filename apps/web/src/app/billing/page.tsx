@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 import { PlanCard } from "@/components/billing/plan-card";
@@ -69,7 +68,7 @@ export default function BillingPage() {
       <header className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/">
-            <Image src="/helzo-scale-logo.png" alt="Helzo Scale" width={140} height={45} className="h-8 w-auto" unoptimized />
+            <img src="/helzo-scale-logo.png" alt="Helzo Scale" className="h-10 w-auto" />
           </Link>
           {hasActiveSubscription && (
             <Link

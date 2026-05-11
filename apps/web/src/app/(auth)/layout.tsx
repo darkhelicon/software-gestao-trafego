@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export const dynamic = 'force-dynamic';
 
 export default function AuthLayout({
@@ -18,7 +16,7 @@ export default function AuthLayout({
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <div className="inline-flex items-center mb-4">
-            <Image src="/helzo-scale-logo.png" alt="Helzo Scale" width={180} height={58} className="h-12 w-auto" unoptimized />
+            <img src="/helzo-scale-logo.png" alt="Helzo Scale" className="h-20 w-auto" />
           </div>
           <p className="text-sm text-gray-500">
             Gestão profissional de TikTok Ads e Meta Ads
