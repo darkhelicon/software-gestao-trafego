@@ -13,7 +13,7 @@ export const corsPlugin = fp(async (app) => {
         cb(null, true);
         return;
       }
-      cb(new Error("Not allowed by CORS"), false);
+      cb(null, false); // reject without throwing — prevents @fastify/cors from propagating as 500
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
