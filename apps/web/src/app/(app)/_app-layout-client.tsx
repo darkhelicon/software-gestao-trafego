@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -144,11 +145,8 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-56 border-r border-white/5 bg-[#0d0d0d] fixed h-full z-20">
         {/* Logo */}
         <div className="h-14 flex items-center px-4 border-b border-white/5">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-brand-400 flex items-center justify-center shrink-0">
-              <span className="text-black font-black text-sm">H</span>
-            </div>
-            <span className="font-bold text-white text-sm">Helzo Scale</span>
+          <Link href="/dashboard">
+            <Image src="/helzo-scale-logo.png" alt="Helzo Scale" width={130} height={42} className="h-7 w-auto" />
           </Link>
         </div>
 
@@ -227,11 +225,8 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
 
       {/* Mobile topbar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-[#0d0d0d] border-b border-white/5 flex items-center px-4 justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-brand-400 flex items-center justify-center">
-            <span className="text-black font-black text-sm">H</span>
-          </div>
-          <span className="font-bold text-white text-sm">Helzo Scale</span>
+        <Link href="/dashboard">
+          <Image src="/helzo-scale-logo.png" alt="Helzo Scale" width={130} height={42} className="h-7 w-auto" />
         </Link>
         <div className="flex items-center gap-2">
           <NotificationBell />
