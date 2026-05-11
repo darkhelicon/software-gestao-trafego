@@ -36,10 +36,15 @@ export default function BillingPage() {
       .finally(() => setFetchingPlans(false));
   }, []);
 
-  const currentPlanSlug = currentOrg?.subscription?.plan.slug;
+  const subscriptionStatus = currentOrg?.subscription?.status;
+  // Only mark a plan as "current" when paid — TRIALING users haven't paid yet
+  // and must be able to click "Assinar agora" on any plan (including START).
+  const currentPlanSlug =
+    subscriptionStatus === "ACTIVE" ? currentOrg?.subscription?.plan.slug : undefined;
+  const isTrialing = subscriptionStatus === "TRIALING";
   const hasActiveSubscription =
     currentOrg?.subscription &&
-    ["TRIALING", "ACTIVE"].includes(currentOrg.subscription.status);
+    ["TRIALING", "ACTIVE"].includes(subscriptionStatus ?? "");
 
   if (isLoading || fetchingPlans) {
     return (
@@ -82,7 +87,16 @@ export default function BillingPage() {
       <div className="relative max-w-6xl mx-auto px-4 py-16">
         {/* Heading */}
         <div className="text-center mb-14">
-          {!hasActiveSubscription ? (
+          {subscriptionStatus === "ACTIVE" ? (
+            <>
+              <h1 className="text-4xl font-extrabold text-white mb-3">
+                Gerencie sua assinatura
+              </h1>
+              <p className="text-gray-400 max-w-md mx-auto">
+                Faça upgrade, downgrade ou cancele a qualquer momento.
+              </p>
+            </>
+          ) : (
             <>
               <h1 className="text-4xl font-extrabold text-white mb-3">
                 Escolha seu plano
@@ -92,17 +106,18 @@ export default function BillingPage() {
                 Cancele a qualquer momento, sem fidelidade.
               </p>
             </>
-          ) : (
-            <>
-              <h1 className="text-4xl font-extrabold text-white mb-3">
-                Gerencie sua assinatura
-              </h1>
-              <p className="text-gray-400 max-w-md mx-auto">
-                Faça upgrade, downgrade ou cancele a qualquer momento.
-              </p>
-            </>
           )}
         </div>
+
+        {/* Trial banner */}
+        {isTrialing && (
+          <div className="mb-8 text-center bg-brand-400/10 border border-brand-400/20 rounded-xl px-6 py-4">
+            <p className="text-brand-400 font-medium text-sm">
+              Você está no período de teste gratuito de 7 dias do plano Start.
+              Escolha um plano abaixo para continuar após o trial.
+            </p>
+          </div>
+        )}
 
         {/* Plans grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
