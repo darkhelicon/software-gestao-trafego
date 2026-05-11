@@ -1,10 +1,12 @@
 import admin from "firebase-admin";
 import type { Auth } from "firebase-admin/auth";
 
-const projectId = process.env["FIREBASE_PROJECT_ID"];
-const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"];
-// Replace literal \n sequences AND strip any stray \r characters introduced by
-// Windows-style CRLF line endings in the Secret Manager value.
+// .trim() removes trailing \r\n that GCP Secret Manager adds when secrets are
+// created via the console or gcloud with heredoc — without it, Firebase rejects
+// tokens because the "aud" claim won't match the padded project ID.
+const projectId = process.env["FIREBASE_PROJECT_ID"]?.trim();
+const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"]?.trim();
+// Replace literal \n sequences AND strip any stray \r characters (CRLF).
 const privateKey = process.env["FIREBASE_PRIVATE_KEY"]
   ?.replace(/\\n/g, "\n")
   .replace(/\r/g, "");
