@@ -91,23 +91,35 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
           try {
             await fetchAndSetOrg();
           } catch {
-            // Both /auth/me attempts failed — resolve ghost user via /auth/sync
-            try {
-              const sync = await api.post<SyncData>("/api/v1/auth/sync", {});
-              const firstMembership = sync.user?.organizationUsers?.[0];
-              if (firstMembership) {
-                setCurrentOrg({
-                  id: firstMembership.organization.id,
-                  name: firstMembership.organization.name,
-                  slug: firstMembership.organization.slug,
-                  role: firstMembership.role,
-                  subscription: firstMembership.organization.subscription,
-                });
-              } else {
+            // If the user is actively on /register, don't auto-sync.
+            // The register page handles account creation — calling /auth/sync here
+            // would create a ghost user with "Minha Empresa" before the user
+            // fills in their company name.
+            const onRegisterPage =
+              typeof window !== "undefined" &&
+              window.location.pathname.startsWith("/register");
+
+            if (onRegisterPage) {
+              setCurrentOrg(null);
+            } else {
+              // Ghost user path: Firebase account exists but Postgres row doesn't.
+              try {
+                const sync = await api.post<SyncData>("/api/v1/auth/sync", {});
+                const firstMembership = sync.user?.organizationUsers?.[0];
+                if (firstMembership) {
+                  setCurrentOrg({
+                    id: firstMembership.organization.id,
+                    name: firstMembership.organization.name,
+                    slug: firstMembership.organization.slug,
+                    role: firstMembership.role,
+                    subscription: firstMembership.organization.subscription,
+                  });
+                } else {
+                  setCurrentOrg(null);
+                }
+              } catch {
                 setCurrentOrg(null);
               }
-            } catch {
-              setCurrentOrg(null);
             }
           }
         } else {
