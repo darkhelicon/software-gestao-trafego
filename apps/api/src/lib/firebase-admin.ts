@@ -3,7 +3,11 @@ import type { Auth } from "firebase-admin/auth";
 
 const projectId = process.env["FIREBASE_PROJECT_ID"];
 const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"];
-const privateKey = process.env["FIREBASE_PRIVATE_KEY"]?.replace(/\\n/g, "\n");
+// Replace literal \n sequences AND strip any stray \r characters introduced by
+// Windows-style CRLF line endings in the Secret Manager value.
+const privateKey = process.env["FIREBASE_PRIVATE_KEY"]
+  ?.replace(/\\n/g, "\n")
+  .replace(/\r/g, "");
 
 if (!admin.apps.length) {
   const useExplicitCred = Boolean(projectId && clientEmail && privateKey);

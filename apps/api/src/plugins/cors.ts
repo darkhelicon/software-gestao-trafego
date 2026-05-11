@@ -1,9 +1,12 @@
 import fp from "fastify-plugin";
 import cors from "@fastify/cors";
 
-// Cloud Run generates new URL hashes on each deploy when using `gcloud run services replace`.
-// We allow any Cloud Run URL that belongs to our web service rather than hardcoding a single hash.
-const CLOUD_RUN_WEB_PATTERN = /^https:\/\/helzo-scale-web-[a-z0-9]+-[a-z0-9]+\.run\.app$/;
+// Cloud Run exposes two URL formats for each service:
+//   1. Hash format:          helzo-scale-web-{hash}-{region-short}.a.run.app
+//   2. Project-number format: helzo-scale-web-{project-number}.{region}.run.app
+// Both must be accepted so CORS preflight works regardless of which URL the user opens.
+const CLOUD_RUN_WEB_PATTERN =
+  /^https:\/\/helzo-scale-web-[a-z0-9]+(?:-[a-z0-9]+)?\.(?:[a-z0-9-]+\.)?run\.app$/;
 
 export const corsPlugin = fp(async (app) => {
   const allowedOrigins =
