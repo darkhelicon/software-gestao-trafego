@@ -35,7 +35,9 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     let decoded;
     try {
-      decoded = await firebaseAuth.verifyIdToken(idToken, true);
+      // checkRevoked omitted — newly created tokens fail the revocation check due to
+      // Firebase propagation delay; revocation is already enforced by the authenticate middleware.
+      decoded = await firebaseAuth.verifyIdToken(idToken);
     } catch (err) {
       request.log.error({ err }, "verifyIdToken failed");
       return reply.status(401).send({ success: false, error: "Invalid token" });
@@ -166,4 +168,109 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.send({ success: true, data: user });
     }
   );
+
+  // POST /auth/sync — resolves ghost users: Firebase account exists but Postgres doesn't.
+  // Called by the frontend when /auth/me returns 401 after retry.
+  // Creates the user with Firebase defaults if they don't exist, so checkout can proceed.
+  app.post("/sync", { config: AUTH_RATE_LIMIT }, async (request, reply) => {
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return reply.status(401).send({ success: false, error: "Unauthorized" });
+    }
+
+    const token = authHeader.slice(7);
+    let decoded;
+    try {
+      decoded = await firebaseAuth.verifyIdToken(token);
+    } catch (err) {
+      request.log.warn({ err }, "sync: verifyIdToken failed");
+      return reply.status(401).send({ success: false, error: "Invalid token" });
+    }
+
+    const orgInclude = {
+      organizationUsers: {
+        include: {
+          organization: {
+            include: { subscription: { include: { plan: true } } },
+          },
+        },
+        take: 1,
+      },
+    } as const;
+
+    const existing = await app.prisma.user.findUnique({
+      where: { firebaseUid: decoded.uid },
+      include: orgInclude,
+    });
+
+    if (existing) {
+      return reply.send({
+        success: true,
+        data: { user: existing, needsOnboarding: false },
+      });
+    }
+
+    // Ghost user — create with Firebase defaults so checkout can proceed.
+    const name =
+      (decoded["name"] as string | undefined) ??
+      decoded.email?.split("@")[0] ??
+      "Usuário";
+    const email = decoded.email ?? "";
+    const slug = `org-${Date.now()}`;
+
+    const result = await app.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: { firebaseUid: decoded.uid, email, name },
+      });
+      const org = await tx.organization.create({
+        data: { name: "Minha Empresa", slug },
+      });
+      await tx.organizationUser.create({
+        data: {
+          userId: user.id,
+          organizationId: org.id,
+          role: "ADMIN",
+          joinedAt: new Date(),
+        },
+      });
+
+      const startPlan = await tx.plan.findUnique({ where: { slug: "START" } });
+      if (startPlan) {
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + 7);
+        await tx.subscription.create({
+          data: {
+            organizationId: org.id,
+            planId: startPlan.id,
+            status: "TRIALING",
+            trialEndsAt: trialEnd,
+          },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          organizationId: org.id,
+          userId: user.id,
+          action: "CREATE",
+          resource: "organization",
+          resourceId: org.id,
+        },
+      });
+
+      return { user, org };
+    });
+
+    request.log.info({ uid: decoded.uid }, "sync: ghost user created in DB");
+
+    const userWithOrg = await app.prisma.user.findUnique({
+      where: { id: result.user.id },
+      include: orgInclude,
+    });
+
+    return reply.status(201).send({
+      success: true,
+      data: { user: userWithOrg, needsOnboarding: true },
+    });
+  });
 };
