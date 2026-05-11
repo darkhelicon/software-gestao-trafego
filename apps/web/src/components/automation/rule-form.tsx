@@ -5,20 +5,23 @@ import { Button } from "@/components/ui/button";
 import type { AutomationRule } from "@/hooks/use-automation";
 
 const CONDITIONS = [
-  { value: "CPA_ABOVE",  label: "CPA maior que", unit: "R$" },
-  { value: "CPA_BELOW",  label: "CPA menor que", unit: "R$" },
-  { value: "ROAS_ABOVE", label: "ROAS maior que", unit: "x" },
-  { value: "ROAS_BELOW", label: "ROAS menor que", unit: "x" },
-  { value: "CTR_BELOW",  label: "CTR menor que", unit: "%" },
-  { value: "SPEND_ABOVE",label: "Gasto maior que", unit: "R$" },
+  { value: "CPA_ABOVE",     label: "CPA maior que",           unit: "R$",  hasThreshold: true },
+  { value: "CPA_BELOW",     label: "CPA menor que",           unit: "R$",  hasThreshold: true },
+  { value: "ROAS_ABOVE",    label: "ROAS maior que",          unit: "x",   hasThreshold: true },
+  { value: "ROAS_BELOW",    label: "ROAS menor que",          unit: "x",   hasThreshold: true },
+  { value: "CTR_BELOW",     label: "CTR menor que",           unit: "%",   hasThreshold: true },
+  { value: "SPEND_ABOVE",   label: "Gasto maior que",         unit: "R$",  hasThreshold: true },
+  { value: "BALANCE_BELOW", label: "Saldo da conta abaixo de",unit: "R$",  hasThreshold: true },
+  { value: "REJECTED",      label: "Campanha reprovada",       unit: "",    hasThreshold: false },
 ];
 
 const ACTIONS = [
-  { value: "PAUSE_CAMPAIGN",    label: "Pausar campanha",       hasValue: false },
-  { value: "RESUME_CAMPAIGN",   label: "Retomar campanha",      hasValue: false },
-  { value: "SCALE_BUDGET",      label: "Aumentar orçamento em", hasValue: true, unit: "%" },
-  { value: "REDUCE_BUDGET",     label: "Reduzir orçamento em",  hasValue: true, unit: "%" },
-  { value: "SEND_ALERT",        label: "Enviar alerta",         hasValue: false },
+  { value: "PAUSE_CAMPAIGN",    label: "Pausar campanha",            hasValue: false },
+  { value: "RESUME_CAMPAIGN",   label: "Retomar campanha",           hasValue: false },
+  { value: "SCALE_BUDGET",      label: "Aumentar orçamento em",      hasValue: true, unit: "%" },
+  { value: "REDUCE_BUDGET",     label: "Reduzir orçamento em",       hasValue: true, unit: "%" },
+  { value: "DUPLICATE_CAMPAIGN",label: "Duplicar campanha (cópia)",  hasValue: false },
+  { value: "SEND_ALERT",        label: "Enviar alerta",              hasValue: false },
 ];
 
 const fieldClass = "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-400/20 focus:border-brand-400 transition-colors";
@@ -41,6 +44,7 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
 
   const selectedCondition = CONDITIONS.find((c) => c.value === condition);
   const selectedAction = ACTIONS.find((a) => a.value === action);
+  const conditionNeedsThreshold = selectedCondition?.hasThreshold !== false;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +52,7 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
       name,
       platform: platform || undefined,
       condition,
-      conditionValue: parseFloat(conditionValue),
+      conditionValue: conditionNeedsThreshold ? parseFloat(conditionValue) : 0,
       action,
       actionValue: selectedAction?.hasValue ? parseFloat(actionValue) : undefined,
       checkInterval: parseInt(checkInterval, 10),
@@ -87,20 +91,22 @@ export function RuleForm({ initial, onSubmit, onCancel, loading }: RuleFormProps
             ))}
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Valor ({selectedCondition?.unit ?? ""})
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={conditionValue}
-            onChange={(e) => setConditionValue(e.target.value)}
-            required
-            className={fieldClass}
-          />
-        </div>
+        {conditionNeedsThreshold && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Valor ({selectedCondition?.unit ?? ""})
+            </label>
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              value={conditionValue}
+              onChange={(e) => setConditionValue(e.target.value)}
+              required
+              className={fieldClass}
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
